@@ -82,6 +82,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = CC16C72927465AB0007E1568 /* Build configuration list for PBXNativeTarget "PintAR" */;
 			buildPhases = (
+				CC16C72F27468350007E1568 /* ShellScript */,
 				CC16C71127465AAE007E1568 /* Sources */,
 				CC16C71227465AAE007E1568 /* Frameworks */,
 				CC16C71327465AAE007E1568 /* Resources */,
@@ -139,6 +140,26 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		CC16C72F27468350007E1568 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if which swiftlint >/dev/null; then\n  swiftlint\nelse\n  echo \"warning: SwiftLint not installed, download from https://github.com/realm/SwiftLint\"\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		CC16C71127465AAE007E1568 /* Sources */ = {

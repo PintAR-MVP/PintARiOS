@@ -39,7 +39,6 @@ class ImageDetailViewController: UIViewController {
 
     // MARK: - UI Setup
 
-
     private func setupUI() {
         setupImageView()
         setupCloseButton()
@@ -53,7 +52,7 @@ class ImageDetailViewController: UIViewController {
             imageView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             imageView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             imageView.topAnchor.constraint(equalTo: view.topAnchor),
-            imageView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            imageView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
     }
 
@@ -65,7 +64,7 @@ class ImageDetailViewController: UIViewController {
             closeButton.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
             closeButton.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
             closeButton.heightAnchor.constraint(equalToConstant: 34),
-            closeButton.widthAnchor.constraint(equalTo: closeButton.heightAnchor),
+            closeButton.widthAnchor.constraint(equalTo: closeButton.heightAnchor)
         ])
 
         var image = UIImage(systemName: "xmark", withConfiguration: UIImage.SymbolConfiguration(pointSize: 16, weight: .bold))
@@ -76,7 +75,7 @@ class ImageDetailViewController: UIViewController {
         blur.isUserInteractionEnabled = false
         blur.clipsToBounds = true
         closeButton.insertSubview(blur, at: 0)
-        if let imageView = closeButton.imageView{
+        if let imageView = closeButton.imageView {
             closeButton.bringSubviewToFront(imageView)
         }
 
@@ -84,7 +83,6 @@ class ImageDetailViewController: UIViewController {
     }
 
     // MARK: - Actions
-
 
     @objc private func dismissView() {
         dismiss(animated: true)

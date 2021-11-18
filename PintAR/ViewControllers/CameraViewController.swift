@@ -69,7 +69,7 @@ class CameraViewController: UIViewController {
             cameraView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             cameraView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             cameraView.topAnchor.constraint(equalTo: view.topAnchor),
-            cameraView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            cameraView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
     }
 
@@ -81,7 +81,7 @@ class CameraViewController: UIViewController {
             takePhotoButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             takePhotoButton.bottomAnchor.constraint(equalTo: view.layoutMarginsGuide.bottomAnchor),
             takePhotoButton.heightAnchor.constraint(equalToConstant: 70),
-            takePhotoButton.widthAnchor.constraint(equalTo: takePhotoButton.heightAnchor),
+            takePhotoButton.widthAnchor.constraint(equalTo: takePhotoButton.heightAnchor)
         ])
 
         var image = UIImage(systemName: "camera", withConfiguration: UIImage.SymbolConfiguration(pointSize: 24, weight: .regular))
@@ -95,7 +95,7 @@ class CameraViewController: UIViewController {
         blur.layer.borderWidth = 2
         blur.layer.borderColor = UIColor.white.cgColor
         takePhotoButton.insertSubview(blur, at: 0)
-        if let imageView = takePhotoButton.imageView{
+        if let imageView = takePhotoButton.imageView {
             takePhotoButton.bringSubviewToFront(imageView)
         }
 
@@ -110,7 +110,7 @@ class CameraViewController: UIViewController {
             imagePickerButton.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
             imagePickerButton.centerYAnchor.constraint(equalTo: takePhotoButton.centerYAnchor),
             imagePickerButton.heightAnchor.constraint(equalToConstant: 40),
-            imagePickerButton.widthAnchor.constraint(equalTo: takePhotoButton.heightAnchor),
+            imagePickerButton.widthAnchor.constraint(equalTo: takePhotoButton.heightAnchor)
         ])
 
         var galleryImage = UIImage(systemName: "photo.on.rectangle.angled", withConfiguration: UIImage.SymbolConfiguration(pointSize: 24, weight: .regular))
@@ -188,7 +188,7 @@ class CameraViewController: UIViewController {
 
 extension CameraViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
 
-    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
         picker.dismiss(animated: true, completion: {
             if let pickedImage = info[.originalImage] as? UIImage {
                 self.showDetailImageView(with: pickedImage)

@@ -26,6 +26,7 @@ Pods/
 *.moved-aside
 *.xccheckout
 *.xcscmblueprint
+R.generated.swift
 
 ## Obj-C/Swift specific
 *.hmap

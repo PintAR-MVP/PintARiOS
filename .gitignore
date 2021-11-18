@@ -18,6 +18,10 @@ DerivedData/
 xcuserdata/
 *.scuserstate
 
+## Pods
+Pods/
+*xcworkspace
+
 ## Other
 *.moved-aside
 *.xccheckout

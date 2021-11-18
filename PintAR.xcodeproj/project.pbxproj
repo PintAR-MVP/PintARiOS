@@ -113,6 +113,7 @@
 				CC16C71227465AAE007E1568 /* Frameworks */,
 				CC16C71327465AAE007E1568 /* Resources */,
 				0DB2BC8AD66FFE23BDEAB506 /* [CP] Embed Pods Frameworks */,
+				0B40C48B2746CA9300908879 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -170,6 +171,24 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		0B40C48B2746CA9300908879 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\n\"$PODS_ROOT/R.swift/rswift\" generate \"$SRCROOT/PintAR/R.generated.swift\"\n";
+		};
 		0DB2BC8AD66FFE23BDEAB506 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -221,10 +240,11 @@
 			outputFileListPaths = (
 			);
 			outputPaths = (
+				$SRCROOT/PintAR/R.generated.swift,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if which swiftlint >/dev/null; then\n  swiftlint\nelse\n  echo \"warning: SwiftLint not installed, download from https://github.com/realm/SwiftLint\"\nfi\n";
+			shellScript = "\"${PODS_ROOT}/SwiftLint/swiftlint\"\n\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

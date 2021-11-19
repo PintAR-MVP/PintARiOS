@@ -6,6 +6,5 @@ target 'PintAR' do
   use_frameworks!
 
   pod 'SwiftLint', '~> 0.41.0'  ## No SPM Support
-  pod 'R.swift', '~> 6.0.0' ## No SPM Support
 
 end

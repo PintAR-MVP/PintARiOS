@@ -7,13 +7,7 @@
 
 import Foundation
 import Vision
-
-protocol DetectObjectUseCaseProtocol {
-
-	func setupObjectDetection() throws
-
-	func recognizeObject(in image: CVPixelBuffer, completion: @escaping (Result<[VNObservation], Error>) -> Void)
-}
+import Combine
 
 class DetectObjectUseCase: DetectObjectUseCaseProtocol {
 
@@ -21,31 +15,51 @@ class DetectObjectUseCase: DetectObjectUseCaseProtocol {
 		case missingConfiguration
 	}
 
-	enum DetectionType {
-		case rectangles(observations: Int)
-        case text
-		case loadMLModel(url: URL)
+    enum DetectionType {
+
+        case rectangles(model: RectangleDetection.Model)
+        case text(fastRecognition: Bool)
+
+        var task: DetectionTask {
+            switch self {
+            case .rectangles(let model):
+                return RectangleDetection(model: model)
+            case .text(let fastRecognition):
+                return TextRecognition(fastRecognition: fastRecognition)
+            }
+        }
 	}
 
     @Published var recognizedText: [String] = []
 
-	let modelUrl: URL
-	private var visionModel: VNCoreMLModel?
+    private let detectionTypes: [DetectionType]
 	private var requests = [VNRequest]()
 	private var requestCompletionHandler: VNImageRequestHandler?
+    private var cancellableSet: Set<AnyCancellable> = []
 
-	init(modelUrl: URL) {
-		self.modelUrl = modelUrl
+    init(detectionTypes: [DetectionType]) {
+        self.detectionTypes = detectionTypes
 	}
 
-	func setupObjectDetection() throws {
-		do {
-			let mLModelRequests = try self.setupObjectDetectionWithMLModel()
-            let textRecognitionRequest = try self.setupTextRecognition()
-			self.requests = [mLModelRequests, textRecognitionRequest]
-		} catch {
-			print("Model loading went wrong: \(error)")
-		}
+	func setupObjectDetection() {
+        requests = detectionTypes.compactMap({ detectionType in
+            do {
+                switch detectionType {
+                case .rectangles(let model):
+                    let detectionTask = RectangleDetection(model: model)
+                    return try detectionTask.setup()
+                case .text(let fastRecognition):
+                    let detectionTask =  TextRecognition(fastRecognition: fastRecognition)
+                    detectionTask.$recognizedText
+                        .assign(to: \.recognizedText, on: self)
+                        .store(in: &cancellableSet)
+                    return detectionTask.setup()
+                }
+            } catch {
+                print("Setting up detection task \(detectionType) failed with \(error)")
+                return nil
+            }
+        })
 	}
 
 	func recognizeObject(in image: CVPixelBuffer, completion: @escaping (Result<[VNObservation], Error>) -> Void) {
@@ -56,51 +70,6 @@ class DetectObjectUseCase: DetectObjectUseCaseProtocol {
 		guard let results = self.requests.compactMap({ $0.results }).first else {
 			return
 		}
-
-		completion(.success(results))
+        completion(.success(results))
 	}
-
-	private func setupObjectDetectionWithMLModel() throws -> VNRequest {
-		do {
-			let visionModel = try VNCoreMLModel(for: MLModel(contentsOf: self.modelUrl))
-			self.visionModel = visionModel
-			let objectRecognition = VNCoreMLRequest(model: visionModel) { request, _ in
-				guard let results = request.results else {
-					return
-				}
-
-				for observation in results where observation is VNRecognizedObjectObservation {
-					guard let objectObservation = observation as? VNRecognizedObjectObservation else {
-						continue
-					}
-
-					// Select only the label with the highest confidence.
-					let objectClass = objectObservation.labels[0]
-					print(objectClass.identifier)
-				}
-			}
-
-			return objectRecognition
-		} catch {
-			throw error
-		}
-	}
-
-    private func setupTextRecognition() throws -> VNRequest {
-        let textDetectionRequest = VNRecognizeTextRequest { request, _ in
-
-            guard let observations = request.results as? [VNRecognizedTextObservation] else {
-                return
-            }
-            let recognizedStrings = observations.compactMap { observation in
-                return observation.topCandidates(1).first?.string
-            }
-
-            self.recognizedText = recognizedStrings
-        }
-
-        textDetectionRequest.recognitionLevel = .accurate
-        textDetectionRequest.recognitionLanguages = ["de-DE"]
-        return textDetectionRequest
-    }
 }

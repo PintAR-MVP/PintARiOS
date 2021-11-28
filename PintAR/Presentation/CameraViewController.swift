@@ -30,15 +30,7 @@ class CameraViewController: UIViewController {
 		return session
 	}()
 
-	private let modelUrl: URL = {
-		guard let model = Bundle.main.url(forResource: "YOLOv3Tiny", withExtension: "mlmodelc") else {
-			return URL(fileURLWithPath: "")
-		}
-
-		return model
-	}()
-
-	private lazy var viewModel = CameraViewModel(detectObjectUseCase: DetectObjectUseCase(modelUrl: modelUrl))
+    private lazy var viewModel = CameraViewModel(detectObjectUseCase: DetectObjectUseCase(detectionTypes: [.rectangles(model: .yoloV3), .text(fastRecognition: false)]))
 
 	private var didShowAlert: Bool = false
 	private var maskLayer = CAShapeLayer()
@@ -54,7 +46,7 @@ class CameraViewController: UIViewController {
 		self.setupUI()
 		self.setupCameraInput()
 		self.setupCameraOutput()
-		try? self.viewModel.configureVision()
+		self.viewModel.configureVision()
 		self.startCaptureSession()
 	}
 

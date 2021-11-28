@@ -16,8 +16,8 @@ struct CameraViewModel {
 		self.detectObjectUseCase = detectObjectUseCase
 	}
 
-	func configureVision() throws {
-		try self.detectObjectUseCase.setupObjectDetection()
+	func configureVision() {
+		self.detectObjectUseCase.setupObjectDetection()
 	}
 
 	func recognizeObject(image: CVImageBuffer, completionHandler: @escaping (Result<[VNObservation], Error>) -> Void) {

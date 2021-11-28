@@ -15,27 +15,17 @@ class DetectObjectUseCase: DetectObjectUseCaseProtocol {
 		case missingConfiguration
 	}
 
-    enum DetectionType {
-
+    enum DetectionType: Hashable {
         case rectangles(model: RectangleDetection.Model)
         case text(fastRecognition: Bool)
-
-        var task: DetectionTask {
-            switch self {
-            case .rectangles(let model):
-                return RectangleDetection(model: model)
-            case .text(let fastRecognition):
-                return TextRecognition(fastRecognition: fastRecognition)
-            }
-        }
 	}
-
-    @Published var recognizedText: [String] = []
 
     private let detectionTypes: [DetectionType]
 	private var requests = [VNRequest]()
 	private var requestCompletionHandler: VNImageRequestHandler?
     private var cancellableSet: Set<AnyCancellable> = []
+
+    var results: [DetectionType: Any] = [:]
 
     init(detectionTypes: [DetectionType]) {
         self.detectionTypes = detectionTypes
@@ -47,12 +37,11 @@ class DetectObjectUseCase: DetectObjectUseCaseProtocol {
                 switch detectionType {
                 case .rectangles(let model):
                     let detectionTask = RectangleDetection(model: model)
+                    results[detectionType] = detectionTask.result
                     return try detectionTask.setup()
                 case .text(let fastRecognition):
                     let detectionTask =  TextRecognition(fastRecognition: fastRecognition)
-                    detectionTask.$recognizedText
-                        .assign(to: \.recognizedText, on: self)
-                        .store(in: &cancellableSet)
+                    results[detectionType] = detectionTask.result
                     return detectionTask.setup()
                 }
             } catch {
@@ -62,14 +51,9 @@ class DetectObjectUseCase: DetectObjectUseCaseProtocol {
         })
 	}
 
-	func recognizeObject(in image: CVPixelBuffer, completion: @escaping (Result<[VNObservation], Error>) -> Void) {
+	func recognizeObject(in image: CVPixelBuffer) {
 		self.requestCompletionHandler = VNImageRequestHandler(cvPixelBuffer: image, options: [:])
 
 		try? self.requestCompletionHandler?.perform(self.requests)
-
-		guard let results = self.requests.compactMap({ $0.results }).first else {
-			return
-		}
-        completion(.success(results))
 	}
 }

@@ -44,6 +44,7 @@ class CameraViewController: UIViewController {
 
 		self.videoDataOutput.setSampleBufferDelegate(self, queue: DispatchQueue(label: "frame_processing_queue"))
 		self.setupUI()
+        self.setupSubscribers()
 		self.setupCameraInput()
 		self.setupCameraOutput()
 		self.viewModel.configureVision()
@@ -66,6 +67,23 @@ class CameraViewController: UIViewController {
         self.setupRecognizedTextLabel()
 		self.setupImageGalleryButton()
 	}
+
+    private func setupSubscribers() {
+        self.viewModel.$recognizedText
+            .map({ $0.joined(separator: " & ") })
+            .receive(on: DispatchQueue.main)
+            .assign(to: \.text, on: self.recognizedTextLabel)
+            .store(in: &cancellableSet)
+
+        self.viewModel.$objectFrame
+            .receive(on: DispatchQueue.main)
+            .sink(receiveValue: { frame in
+                self.removeMask()
+                self.drawBoundingBox(boundingBox: frame)
+                self.addBoundingBox()
+            })
+            .store(in: &cancellableSet)
+    }
 
 	private func setupCameraView() {
 		view.addSubview(self.cameraView)
@@ -122,12 +140,6 @@ class CameraViewController: UIViewController {
         self.recognizedTextLabel.textColor = .white
         self.recognizedTextLabel.numberOfLines = 0
         self.recognizedTextLabel.font = .preferredFont(forTextStyle: .caption1)
-
-        (self.viewModel.detectObjectUseCase as? DetectObjectUseCase)?.$recognizedText
-            .map({ $0.joined(separator: " & ") })
-            .receive(on: DispatchQueue.main)
-            .assign(to: \.text, on: self.recognizedTextLabel)
-            .store(in: &cancellableSet)
     }
 
 	private func setupImageGalleryButton() {
@@ -270,30 +282,7 @@ extension CameraViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
 			return
 		}
 
-		self.viewModel.recognizeObject(image: pixelBuffer) { result in
-			guard case .success(let results) = result else {
-				return
-			}
-
-			DispatchQueue.main.async {
-				self.drawRectangles(results: results)
-			}
-		}
-	}
-
-	private func drawRectangles(results: [VNObservation]) {
-		guard let results = results as? [VNDetectedObjectObservation] else {
-			return
-		}
-
-		self.removeMask()
-
-		guard let rect = results.first else {
-			return
-		}
-
-		self.drawBoundingBox(rect: rect)
-		self.addBoundingBox()
+		self.viewModel.recognizeObject(image: pixelBuffer)
 	}
 
 	// this should be extracted from here
@@ -326,7 +315,7 @@ extension CameraViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
 // MARK: drawing Bounding Box
 extension CameraViewController {
 
-	private func drawBoundingBox(rect: VNDetectedObjectObservation) {
+	private func drawBoundingBox(boundingBox: CGRect) {
 		guard let cameraLiveViewLayer = self.cameraLiveViewLayer else {
 			return
 		}
@@ -334,7 +323,7 @@ extension CameraViewController {
 		let transform = CGAffineTransform(scaleX: 1, y: -1).translatedBy(x: 0, y: -cameraLiveViewLayer.bounds.height)
 		let scale = CGAffineTransform.identity.scaledBy(x: cameraLiveViewLayer.bounds.width, y: cameraLiveViewLayer.bounds.height)
 
-		let bounds = rect.boundingBox.applying(scale).applying(transform)
+		let bounds = boundingBox.applying(scale).applying(transform)
 
 		self.createLayer(in: bounds)
 	}

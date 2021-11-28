@@ -8,6 +8,7 @@
 import UIKit
 import AVFoundation
 import Vision
+import Combine
 
 class CameraViewController: UIViewController {
 
@@ -16,6 +17,7 @@ class CameraViewController: UIViewController {
 	private let cameraView = UIView()
 	private let takePhotoButton = UIButton()
 	private let imagePickerButton = UIButton()
+    private let recognizedTextLabel = UILabel()
 	private lazy var imagePicker = UIImagePickerController()
 	private let blur = UIVisualEffectView(effect: UIBlurEffect(style: .light))
 	private var inputDevice: AVCaptureDeviceInput?
@@ -42,12 +44,13 @@ class CameraViewController: UIViewController {
 	private var maskLayer = CAShapeLayer()
 	private var isTapped = false
 	var bufferSize: CGSize = .zero
+    var cancellableSet: Set<AnyCancellable> = []
 
 	// MARK: - Lifecycle
 	override func viewDidLoad() {
 		super.viewDidLoad()
 
-		self.videoDataOutput.setSampleBufferDelegate(self, queue: DispatchQueue(label: "frame_procceing_queue"))
+		self.videoDataOutput.setSampleBufferDelegate(self, queue: DispatchQueue(label: "frame_processing_queue"))
 		self.setupUI()
 		self.setupCameraInput()
 		self.setupCameraOutput()
@@ -68,6 +71,7 @@ class CameraViewController: UIViewController {
 	private func setupUI() {
 		self.setupCameraView()
 		self.setupTakePhotoButton()
+        self.setupRecognizedTextLabel()
 		self.setupImageGalleryButton()
 	}
 
@@ -111,6 +115,28 @@ class CameraViewController: UIViewController {
 
 		self.takePhotoButton.addTarget(self, action: #selector(takePhoto), for: .touchUpInside)
 	}
+
+    private func setupRecognizedTextLabel() {
+        self.view.addSubview(recognizedTextLabel)
+
+        self.recognizedTextLabel.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            self.recognizedTextLabel.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
+            self.recognizedTextLabel.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
+            self.recognizedTextLabel.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor, constant: 20)
+        ])
+
+        self.recognizedTextLabel.textAlignment = .center
+        self.recognizedTextLabel.textColor = .white
+        self.recognizedTextLabel.numberOfLines = 0
+        self.recognizedTextLabel.font = .preferredFont(forTextStyle: .caption1)
+
+        (self.viewModel.detectObjectUseCase as? DetectObjectUseCase)?.$recognizedText
+            .map({ $0.joined(separator: " & ") })
+            .receive(on: DispatchQueue.main)
+            .assign(to: \.text, on: self.recognizedTextLabel)
+            .store(in: &cancellableSet)
+    }
 
 	private func setupImageGalleryButton() {
 		self.view.addSubview(self.imagePickerButton)
@@ -252,7 +278,7 @@ extension CameraViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
 			return
 		}
 
-		self.viewModel.recogniseObject(image: pixelBuffer) { result in
+		self.viewModel.recognizeObject(image: pixelBuffer) { result in
 			guard case .success(let results) = result else {
 				return
 			}

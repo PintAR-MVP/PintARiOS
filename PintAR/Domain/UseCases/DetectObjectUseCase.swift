@@ -12,7 +12,7 @@ protocol DetectObjectUseCaseProtocol {
 
 	func setupObjectDetection() throws
 
-	func recogniseObject(in image: CVPixelBuffer, completion: @escaping (Result<[VNObservation], Error>) -> Void)
+	func recognizeObject(in image: CVPixelBuffer, completion: @escaping (Result<[VNObservation], Error>) -> Void)
 }
 
 class DetectObjectUseCase: DetectObjectUseCaseProtocol {
@@ -23,8 +23,11 @@ class DetectObjectUseCase: DetectObjectUseCaseProtocol {
 
 	enum DetectionType {
 		case rectangles(observations: Int)
+        case text
 		case loadMLModel(url: URL)
 	}
+
+    @Published var recognizedText: [String] = []
 
 	let modelUrl: URL
 	private var visionModel: VNCoreMLModel?
@@ -38,14 +41,14 @@ class DetectObjectUseCase: DetectObjectUseCaseProtocol {
 	func setupObjectDetection() throws {
 		do {
 			let mLModelRequests = try self.setupObjectDetectionWithMLModel()
-			let textRequest = try self.setupTextRecognition()
-			self.requests = [mLModelRequests, textRequest]
+            let textRecognitionRequest = try self.setupTextRecognition()
+			self.requests = [mLModelRequests, textRecognitionRequest]
 		} catch {
 			print("Model loading went wrong: \(error)")
 		}
 	}
 
-	func recogniseObject(in image: CVPixelBuffer, completion: @escaping (Result<[VNObservation], Error>) -> Void) {
+	func recognizeObject(in image: CVPixelBuffer, completion: @escaping (Result<[VNObservation], Error>) -> Void) {
 		self.requestCompletionHandler = VNImageRequestHandler(cvPixelBuffer: image, options: [:])
 
 		try? self.requestCompletionHandler?.perform(self.requests)
@@ -61,7 +64,7 @@ class DetectObjectUseCase: DetectObjectUseCaseProtocol {
 		do {
 			let visionModel = try VNCoreMLModel(for: MLModel(contentsOf: self.modelUrl))
 			self.visionModel = visionModel
-			let objectRecognition = VNCoreMLRequest(model: visionModel) { request, error in
+			let objectRecognition = VNCoreMLRequest(model: visionModel) { request, _ in
 				guard let results = request.results else {
 					return
 				}
@@ -83,17 +86,21 @@ class DetectObjectUseCase: DetectObjectUseCaseProtocol {
 		}
 	}
 
-	private func setupTextRecognition() throws -> VNRequest {
-		do {
-			let textRecognitionRequest = VNDetectTextRectanglesRequest { request, error in
-				guard let results = request.results else {
-					return
-				}
+    private func setupTextRecognition() throws -> VNRequest {
+        let textDetectionRequest = VNRecognizeTextRequest { request, _ in
 
-			}
+            guard let observations = request.results as? [VNRecognizedTextObservation] else {
+                return
+            }
+            let recognizedStrings = observations.compactMap { observation in
+                return observation.topCandidates(1).first?.string
+            }
 
-			textRecognitionRequest.reportCharacterBoxes = true
-			return textRecognitionRequest
-		}
-	}
+            self.recognizedText = recognizedStrings
+        }
+
+        textDetectionRequest.recognitionLevel = .accurate
+        textDetectionRequest.recognitionLanguages = ["de-DE"]
+        return textDetectionRequest
+    }
 }

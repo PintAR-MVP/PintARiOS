@@ -412,7 +412,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = XYJ2TQ4992;
+				DEVELOPMENT_TEAM = 44Q9MM7DDC;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = PintAR/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "This application requires camera access for scanning products.";
@@ -445,7 +445,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = XYJ2TQ4992;
+				DEVELOPMENT_TEAM = 44Q9MM7DDC;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = PintAR/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "This application requires camera access for scanning products.";

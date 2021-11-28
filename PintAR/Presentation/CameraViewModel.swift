@@ -10,7 +10,7 @@ import Vision
 
 struct CameraViewModel {
 
-	private let detectObjectUseCase: DetectObjectUseCaseProtocol
+	let detectObjectUseCase: DetectObjectUseCaseProtocol
 
 	init(detectObjectUseCase: DetectObjectUseCaseProtocol) {
 		self.detectObjectUseCase = detectObjectUseCase
@@ -20,7 +20,7 @@ struct CameraViewModel {
 		try self.detectObjectUseCase.setupObjectDetection()
 	}
 
-	func recogniseObject(image: CVImageBuffer, completionHandler: @escaping (Result<[VNObservation], Error>) -> Void) {
-		self.detectObjectUseCase.recogniseObject(in: image, completion: completionHandler)
+	func recognizeObject(image: CVImageBuffer, completionHandler: @escaping (Result<[VNObservation], Error>) -> Void) {
+		self.detectObjectUseCase.recognizeObject(in: image, completion: completionHandler)
 	}
 }

@@ -57,7 +57,7 @@ class RectangleDetection: DetectionTask {
 
 					// Select only the label with the highest confidence.
 					let objectClass = objectObservation.labels[0]
-					print(objectClass.identifier)
+//					print(objectClass.identifier)
                     output.0 = objectClass.identifier
 				}
 

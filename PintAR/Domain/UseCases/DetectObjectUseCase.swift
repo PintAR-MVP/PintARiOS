@@ -8,6 +8,8 @@
 import Foundation
 import Vision
 import Combine
+import CoreImage
+import UIKit
 
 class DetectObjectUseCase: DetectObjectUseCaseProtocol {
 
@@ -18,11 +20,14 @@ class DetectObjectUseCase: DetectObjectUseCaseProtocol {
     enum DetectionType: Hashable {
         case rectangles(model: RectangleDetection.Model)
         case text(fastRecognition: Bool)
+        case contour
 	}
 
     private let detectionTypes: [DetectionType]
 	private var requests = [VNRequest]()
+    private var preProcessedRequests = [VNRequest]()
 	private var requestCompletionHandler: VNImageRequestHandler?
+    private var preProcessedRequestCompletionHandler: VNImageRequestHandler?
     private var cancellableSet: Set<AnyCancellable> = []
 
     var results: [DetectionType: Any] = [:]
@@ -40,19 +45,31 @@ class DetectObjectUseCase: DetectObjectUseCaseProtocol {
                     results[detectionType] = detectionTask.result
                     return try detectionTask.setup()
                 case .text(let fastRecognition):
-                    let detectionTask =  TextRecognition(fastRecognition: fastRecognition)
+                    let detectionTask = TextRecognition(fastRecognition: fastRecognition)
                     results[detectionType] = detectionTask.result
                     return detectionTask.setup()
+                case .contour:
+                    return nil // Should be included in the preProcessedRequests
                 }
             } catch {
                 print("Setting up detection task \(detectionType) failed with \(error)")
                 return nil
             }
         })
+
+        // Setup contour detection in a separate VNRequestArray
+        let detectionTask = ContourDetection()
+        results[.contour] = detectionTask.result
+        preProcessedRequests = [detectionTask.setup()]
 	}
 
 	func recognizeObject(in image: CVPixelBuffer) {
 		self.requestCompletionHandler = VNImageRequestHandler(cvPixelBuffer: image, options: [:])
+
+        if let cgImage = ContourDetection.preprocess(buffer: image) {
+            self.preProcessedRequestCompletionHandler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+            try? self.preProcessedRequestCompletionHandler?.perform(self.preProcessedRequests)
+        }
 
 		try? self.requestCompletionHandler?.perform(self.requests)
 	}

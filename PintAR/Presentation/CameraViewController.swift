@@ -30,12 +30,15 @@ class CameraViewController: UIViewController {
 		return session
 	}()
 
-    private lazy var viewModel = CameraViewModel(detectObjectUseCase: DetectObjectUseCase(detectionTypes: [.rectangles(model: .yoloV3), .text(fastRecognition: false)]))
+    private lazy var viewModel = CameraViewModel(detectObjectUseCase: DetectObjectUseCase(detectionTypes: [.rectangles(model: .yoloV3), .text(fastRecognition: false), .contour]))
 
-	private var didShowAlert: Bool = false
-	private var maskLayer = CAShapeLayer()
+	private var rectangleMaskLayer = CAShapeLayer()
+    private var shapeMaskLayer = CAShapeLayer()
+
+    private var didShowAlert: Bool = false
 	private var isTapped = false
-	var bufferSize: CGSize = .zero
+
+    var bufferSize: CGSize = .zero
     var cancellableSet: Set<AnyCancellable> = []
 
 	// MARK: - Lifecycle
@@ -78,9 +81,16 @@ class CameraViewController: UIViewController {
         self.viewModel.$objectFrame
             .receive(on: DispatchQueue.main)
             .sink(receiveValue: { frame in
-                self.removeMask()
+                self.removeRectangleMask()
                 self.drawBoundingBox(boundingBox: frame)
-                self.addBoundingBox()
+            })
+            .store(in: &cancellableSet)
+
+        self.viewModel.$shapes
+            .receive(on: DispatchQueue.main)
+            .sink(receiveValue: { paths in
+                self.removeShapeMask()
+                self.drawContours(paths: paths)
             })
             .store(in: &cancellableSet)
     }
@@ -234,8 +244,7 @@ class CameraViewController: UIViewController {
 		present(self.imagePicker, animated: true, completion: nil)
 	}
 
-	@objc
-	private func takePhoto() {
+	@objc private func takePhoto() {
 		self.isTapped = true
 	}
 
@@ -312,7 +321,7 @@ extension CameraViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
 	}
 }
 
-// MARK: drawing Bounding Box
+// MARK: Draw overlays
 extension CameraViewController {
 
 	private func drawBoundingBox(boundingBox: CGRect) {
@@ -325,24 +334,45 @@ extension CameraViewController {
 
 		let bounds = boundingBox.applying(scale).applying(transform)
 
-		self.createLayer(in: bounds)
+        self.rectangleMaskLayer = CAShapeLayer()
+        self.rectangleMaskLayer.frame = bounds
+        self.rectangleMaskLayer.cornerRadius = 10
+        self.rectangleMaskLayer.opacity = 1
+        self.rectangleMaskLayer.borderColor = UIColor.systemBlue.cgColor
+        self.rectangleMaskLayer.borderWidth = 6.0
+        self.cameraLiveViewLayer?.insertSublayer(self.rectangleMaskLayer, at: 1)
 	}
 
-	private func createLayer(in rect: CGRect) {
-		self.maskLayer = CAShapeLayer()
-		self.maskLayer.frame = rect
-		self.maskLayer.cornerRadius = 10
-		self.maskLayer.opacity = 1
-		self.maskLayer.borderColor = UIColor.systemBlue.cgColor
-		self.maskLayer.borderWidth = 6.0
+    private func drawContours(paths: [CGPath]) {
+        guard let cameraLiveViewLayer = self.cameraLiveViewLayer else {
+            return
+        }
+
+        let transform = CGAffineTransform(scaleX: 1, y: -1).translatedBy(x: 0, y: -cameraLiveViewLayer.bounds.height)
+        let scale = CGAffineTransform.identity.scaledBy(x: cameraLiveViewLayer.bounds.width, y: cameraLiveViewLayer.bounds.height)
+
+        let contourPath = CGMutablePath()
+        paths.forEach {
+            let path = UIBezierPath(cgPath: $0)
+            path.apply(scale)
+            path.apply(transform)
+            contourPath.addPath(path.cgPath)
+        }
+
+        self.shapeMaskLayer.path = contourPath
+        self.shapeMaskLayer.strokeColor = UIColor.red.cgColor
+        self.shapeMaskLayer.lineWidth = 5
+        self.shapeMaskLayer.fillColor = UIColor.clear.cgColor
+        self.cameraLiveViewLayer?.insertSublayer(self.shapeMaskLayer, at: 1)
+    }
+
+	private func removeRectangleMask() {
+		self.rectangleMaskLayer.sublayers?.removeAll()
+		self.rectangleMaskLayer.removeFromSuperlayer()
 	}
 
-	private func addBoundingBox() {
-		self.cameraLiveViewLayer?.insertSublayer(self.maskLayer, at: 1)
-	}
-
-	private func removeMask() {
-		self.maskLayer.sublayers?.removeAll()
-		self.maskLayer.removeFromSuperlayer()
-	}
+    private func removeShapeMask() {
+        self.shapeMaskLayer.sublayers?.removeAll()
+        self.shapeMaskLayer.removeFromSuperlayer()
+    }
 }

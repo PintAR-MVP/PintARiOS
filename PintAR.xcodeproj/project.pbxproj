@@ -19,6 +19,9 @@
 		CC16C72227465AB0007E1568 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CC16C72127465AB0007E1568 /* Assets.xcassets */; };
 		CC16C72527465AB0007E1568 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CC16C72327465AB0007E1568 /* LaunchScreen.storyboard */; };
 		CC16C72D27465C8E007E1568 /* CameraViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC16C72C27465C8E007E1568 /* CameraViewController.swift */; };
+		CCD96D422753A3C400786079 /* DetectionTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCD96D412753A3C400786079 /* DetectionTask.swift */; };
+		CCD96D442753A9EE00786079 /* RectangleDetection.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCD96D432753A9EE00786079 /* RectangleDetection.swift */; };
+		CCD96D462753A9F500786079 /* TextRecognition.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCD96D452753A9F500786079 /* TextRecognition.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -38,6 +41,9 @@
 		CC16C72427465AB0007E1568 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		CC16C72627465AB0007E1568 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		CC16C72C27465C8E007E1568 /* CameraViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraViewController.swift; sourceTree = "<group>"; };
+		CCD96D412753A3C400786079 /* DetectionTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetectionTask.swift; sourceTree = "<group>"; };
+		CCD96D432753A9EE00786079 /* RectangleDetection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RectangleDetection.swift; sourceTree = "<group>"; };
+		CCD96D452753A9F500786079 /* TextRecognition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextRecognition.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -72,7 +78,10 @@
 		0B02C8FE274D7393008F0506 /* UseCases */ = {
 			isa = PBXGroup;
 			children = (
+				CCD96D412753A3C400786079 /* DetectionTask.swift */,
 				0B02C8FF274D74CB008F0506 /* DetectObjectUseCase.swift */,
+				CCD96D432753A9EE00786079 /* RectangleDetection.swift */,
+				CCD96D452753A9F500786079 /* TextRecognition.swift */,
 			);
 			path = UseCases;
 			sourceTree = "<group>";
@@ -266,8 +275,11 @@
 				CC16C71D27465AAE007E1568 /* ImageDetailViewController.swift in Sources */,
 				0B02C8FA274D707D008F0506 /* CGPoint+Extension.swift in Sources */,
 				CC16C72D27465C8E007E1568 /* CameraViewController.swift in Sources */,
+				CCD96D422753A3C400786079 /* DetectionTask.swift in Sources */,
 				0B02C8FC274D71DE008F0506 /* CameraViewModel.swift in Sources */,
 				0B02C904274D7AB2008F0506 /* Result+Extension.swift in Sources */,
+				CCD96D442753A9EE00786079 /* RectangleDetection.swift in Sources */,
+				CCD96D462753A9F500786079 /* TextRecognition.swift in Sources */,
 				0B02C900274D74CB008F0506 /* DetectObjectUseCase.swift in Sources */,
 				CC16C71927465AAE007E1568 /* AppDelegate.swift in Sources */,
 			);
@@ -412,7 +424,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = XYJ2TQ4992;
+				DEVELOPMENT_TEAM = 44Q9MM7DDC;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = PintAR/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "This application requires camera access for scanning products.";
@@ -445,7 +457,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = XYJ2TQ4992;
+				DEVELOPMENT_TEAM = 44Q9MM7DDC;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = PintAR/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "This application requires camera access for scanning products.";

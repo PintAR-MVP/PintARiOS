@@ -9,7 +9,6 @@ import Foundation
 import Vision
 import Combine
 import CoreImage
-import UIKit
 
 class DetectObjectUseCase: DetectObjectUseCaseProtocol {
 

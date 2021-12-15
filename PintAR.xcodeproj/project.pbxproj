@@ -24,6 +24,7 @@
 		CCD96D422753A3C400786079 /* DetectionTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCD96D412753A3C400786079 /* DetectionTask.swift */; };
 		CCD96D442753A9EE00786079 /* RectangleDetection.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCD96D432753A9EE00786079 /* RectangleDetection.swift */; };
 		CCD96D462753A9F500786079 /* TextRecognition.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCD96D452753A9F500786079 /* TextRecognition.swift */; };
+		F6FFD2982769F1880076A3FF /* YOLOv5-train.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = F6FFD2972769F1880076A3FF /* YOLOv5-train.mlmodel */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -48,6 +49,7 @@
 		CCD96D412753A3C400786079 /* DetectionTask.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DetectionTask.swift; sourceTree = "<group>"; };
 		CCD96D432753A9EE00786079 /* RectangleDetection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RectangleDetection.swift; sourceTree = "<group>"; };
 		CCD96D452753A9F500786079 /* TextRecognition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextRecognition.swift; sourceTree = "<group>"; };
+		F6FFD2972769F1880076A3FF /* YOLOv5-train.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = "YOLOv5-train.mlmodel"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -95,6 +97,7 @@
 		0B2AC9DD274EC6EA00C2EE98 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				F6FFD2972769F1880076A3FF /* YOLOv5-train.mlmodel */,
 				0B2AC9E2274ECB9A00C2EE98 /* YOLOv3Tiny.mlmodel */,
 			);
 			path = Resources;
@@ -280,6 +283,7 @@
 			files = (
 				0B2AC9E3274ECB9A00C2EE98 /* YOLOv3Tiny.mlmodel in Sources */,
 				CC16C71D27465AAE007E1568 /* ImageDetailViewController.swift in Sources */,
+				F6FFD2982769F1880076A3FF /* YOLOv5-train.mlmodel in Sources */,
 				CC3D70822757D084008EB6AB /* ContourDetection.swift in Sources */,
 				0B02C8FA274D707D008F0506 /* CGPoint+Extension.swift in Sources */,
 				CC16C72D27465C8E007E1568 /* CameraViewController.swift in Sources */,
@@ -433,7 +437,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 44Q9MM7DDC;
+				DEVELOPMENT_TEAM = UPJ8D34987;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = PintAR/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "This application requires camera access for scanning products.";
@@ -466,7 +470,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 44Q9MM7DDC;
+				DEVELOPMENT_TEAM = UPJ8D34987;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = PintAR/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "This application requires camera access for scanning products.";

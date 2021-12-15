@@ -12,7 +12,7 @@ import Combine
 class CameraViewModel {
 
 	@Published var recognizedText: [String] = []
-	@Published var objectFrame: CGRect = .zero
+	@Published var objectFrame: [CGRect] = [.zero]
 	@Published var objectIdentifier: String = ""
 	@Published var shapes: [CGPath] = []
 	@Published var rgb: ColorDetection.RGBA = (0, 0, 0, 0)

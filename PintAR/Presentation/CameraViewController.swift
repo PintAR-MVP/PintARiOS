@@ -70,21 +70,31 @@ class CameraViewController: UIViewController {
 		self.setupImageGalleryButton()
 	}
 
-	private func setupSubscribers() {
-		self.viewModel.$recognizedText
-			.map({ $0.joined(separator: " & ") })
-			.receive(on: DispatchQueue.main)
-			.assign(to: \.text, on: self.recognizedTextLabel)
-			.store(in: &cancellableSet)
-
-		self.viewModel.$objectFrame
-			.receive(on: DispatchQueue.main)
-			.sink(receiveValue: { frame in
-				self.removeRectangleMask()
-				self.drawBoundingBox(boundingBox: frame)
-			})
-			.store(in: &cancellableSet)
-	}
+    private func setupSubscribers() {
+        /*
+        self.viewModel.$recognizedText
+            .map({ $0.joined(separator: " & ") })
+            .receive(on: DispatchQueue.main)
+            .assign(to: \.text, on: self.recognizedTextLabel)
+            .store(in: &cancellableSet)
+        */
+        self.viewModel.$objectFrame
+            .receive(on: DispatchQueue.main)
+            .sink(receiveValue: { frame in
+                self.removeRectangleMask()
+                self.drawBoundingBox(boundingBox: frame)
+            })
+            .store(in: &cancellableSet)
+        /*
+        self.viewModel.$shapes
+            .receive(on: DispatchQueue.main)
+            .sink(receiveValue: { paths in
+                self.removeShapeMask()
+                self.drawContours(paths: paths)
+            })
+            .store(in: &cancellableSet)
+        */
+    }
 
 	private func setupCameraView() {
 		view.addSubview(self.cameraView)
@@ -315,23 +325,33 @@ extension CameraViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
 // MARK: Draw overlays
 extension CameraViewController {
 
-	private func drawBoundingBox(boundingBox: CGRect) {
+	private func drawBoundingBox(boundingBox: [CGRect]) {
 		guard let cameraLiveViewLayer = self.cameraLiveViewLayer else {
 			return
 		}
 
 		let transform = CGAffineTransform(scaleX: 1, y: -1).translatedBy(x: 0, y: -cameraLiveViewLayer.bounds.height)
 		let scale = CGAffineTransform.identity.scaledBy(x: cameraLiveViewLayer.bounds.width, y: cameraLiveViewLayer.bounds.height)
+        
+        
+        
+        for box in boundingBox {
+            print(box)
+            let boxLayer = CAShapeLayer()
+            let bounds = box.applying(scale).applying(transform)
+            boxLayer.frame = bounds
+            boxLayer.cornerRadius = 10
+            boxLayer.opacity = 1
+            boxLayer.borderColor = UIColor.systemBlue.cgColor
+            boxLayer.borderWidth = 6.0
+            
+            rectangleMaskLayer.addSublayer(boxLayer)
+        }
+        
+        self.cameraLiveViewLayer?.insertSublayer(self.rectangleMaskLayer, at: 1)
+		
 
-		let bounds = boundingBox.applying(scale).applying(transform)
-
-		self.rectangleMaskLayer = CAShapeLayer()
-		self.rectangleMaskLayer.frame = bounds
-		self.rectangleMaskLayer.cornerRadius = 10
-		self.rectangleMaskLayer.opacity = 1
-		self.rectangleMaskLayer.borderColor = UIColor.systemBlue.cgColor
-		self.rectangleMaskLayer.borderWidth = 6.0
-		self.cameraLiveViewLayer?.insertSublayer(self.rectangleMaskLayer, at: 1)
+        
 	}
 
 	private func removeRectangleMask() {

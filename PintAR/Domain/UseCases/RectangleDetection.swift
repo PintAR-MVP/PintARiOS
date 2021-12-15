@@ -11,20 +11,20 @@ import Combine
 class RectangleDetection: DetectionTask {
 
 	enum Model {
-		case yoloV3
+        case yoloV5
 
 		var name: String {
 			switch self {
-			case .yoloV3:
-				return "YOLOv3Tiny"
+            case .yoloV5:
+                return "YOLOv5-train"
 			}
 		}
 
 		var modelURL: URL {
 			let url: URL?
 			switch self {
-			case .yoloV3:
-				url = Bundle.main.url(forResource: self.name, withExtension: "mlmodelc")
+            case .yoloV5:
+                url = Bundle.main.url(forResource: self.name, withExtension: "mlmodelc")
 			}
 			return url ?? URL(fileURLWithPath: "")
 		}
@@ -51,10 +51,11 @@ class RectangleDetection: DetectionTask {
                 var output: ([String], [CGRect]) = ([""], [.zero])
 
 				for observation in results where observation is VNRecognizedObjectObservation {
+                    print(observation)
 					guard let objectObservation = observation as? VNRecognizedObjectObservation else {
 						continue
 					}
-
+                    
 					// Select only the label with the highest confidence.
 					let objectClass = objectObservation.labels[0]
 //					print(objectClass.identifier)

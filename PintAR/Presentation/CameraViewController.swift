@@ -336,7 +336,7 @@ extension CameraViewController {
         
         
         for box in boundingBox {
-            print(box)
+            //print(box)
             let boxLayer = CAShapeLayer()
             let bounds = box.applying(scale).applying(transform)
             boxLayer.frame = bounds

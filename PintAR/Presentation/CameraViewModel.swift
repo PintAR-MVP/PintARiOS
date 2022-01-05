@@ -15,6 +15,7 @@ class CameraViewModel {
     @Published var objectFrame: CGRect = .zero
     @Published var objectIdentifier: String = ""
     @Published var shapes: [CGPath] = []
+    @Published var rgb: ColorDetection.RGBA = (0, 0, 0, 0)
 
     private var cancellableSet: Set<AnyCancellable> = []
     private let detectObjectUseCase: DetectObjectUseCaseProtocol
@@ -54,9 +55,7 @@ class CameraViewModel {
                     .store(in: &cancellableSet)
             case .color:
                 ColorDetection.convert(value: value)?
-                    .sink(receiveValue: { distance in
-                        print("Color distance: \(distance)")
-                    })
+                    .assign(to: \.rgb, on: self)
                     .store(in: &cancellableSet)
             }
         }

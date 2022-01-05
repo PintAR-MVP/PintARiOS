@@ -14,6 +14,7 @@
 		0B2AC9E3274ECB9A00C2EE98 /* YOLOv3Tiny.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = 0B2AC9E2274ECB9A00C2EE98 /* YOLOv3Tiny.mlmodel */; };
 		0B40C48A2746C4D500908879 /* main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0B40C4892746C4D500908879 /* main.storyboard */; };
 		91EEE061F85B0C07D8EDB313 /* Pods_PintAR.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 33DF1B1870E6ABAFE139D29F /* Pods_PintAR.framework */; };
+		CC16AD972785CDB80016C47F /* ColorDetection.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC16AD962785CDB80016C47F /* ColorDetection.swift */; };
 		CC16C71927465AAE007E1568 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC16C71827465AAE007E1568 /* AppDelegate.swift */; };
 		CC16C71D27465AAE007E1568 /* ImageDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC16C71C27465AAE007E1568 /* ImageDetailViewController.swift */; };
 		CC16C72227465AB0007E1568 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CC16C72127465AB0007E1568 /* Assets.xcassets */; };
@@ -35,6 +36,7 @@
 		165B6C22C262B2B1B7422BDC /* Pods-PintAR.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-PintAR.debug.xcconfig"; path = "Target Support Files/Pods-PintAR/Pods-PintAR.debug.xcconfig"; sourceTree = "<group>"; };
 		33DF1B1870E6ABAFE139D29F /* Pods_PintAR.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_PintAR.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		60E5E2B9B392A09CF780013B /* Pods-PintAR.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-PintAR.release.xcconfig"; path = "Target Support Files/Pods-PintAR/Pods-PintAR.release.xcconfig"; sourceTree = "<group>"; };
+		CC16AD962785CDB80016C47F /* ColorDetection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorDetection.swift; sourceTree = "<group>"; };
 		CC16C71527465AAE007E1568 /* PintAR.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PintAR.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CC16C71827465AAE007E1568 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		CC16C71C27465AAE007E1568 /* ImageDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageDetailViewController.swift; sourceTree = "<group>"; };
@@ -85,6 +87,7 @@
 				CCD96D432753A9EE00786079 /* RectangleDetection.swift */,
 				CC3D70812757D084008EB6AB /* ContourDetection.swift */,
 				CCD96D452753A9F500786079 /* TextRecognition.swift */,
+				CC16AD962785CDB80016C47F /* ColorDetection.swift */,
 			);
 			path = UseCases;
 			sourceTree = "<group>";
@@ -282,6 +285,7 @@
 				CC16C72D27465C8E007E1568 /* CameraViewController.swift in Sources */,
 				CCD96D422753A3C400786079 /* DetectionTask.swift in Sources */,
 				0B02C8FC274D71DE008F0506 /* CameraViewModel.swift in Sources */,
+				CC16AD972785CDB80016C47F /* ColorDetection.swift in Sources */,
 				0B02C904274D7AB2008F0506 /* Result+Extension.swift in Sources */,
 				CCD96D442753A9EE00786079 /* RectangleDetection.swift in Sources */,
 				CCD96D462753A9F500786079 /* TextRecognition.swift in Sources */,
@@ -444,7 +448,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = pintAR.PintAR.dk;
+				PRODUCT_BUNDLE_IDENTIFIER = pintAR.PintAR;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -477,7 +481,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = pintAR.PintAR.dk;
+				PRODUCT_BUNDLE_IDENTIFIER = pintAR.PintAR;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;

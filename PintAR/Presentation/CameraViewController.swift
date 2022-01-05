@@ -30,7 +30,7 @@ class CameraViewController: UIViewController {
 		return session
 	}()
 
-    private lazy var viewModel = CameraViewModel(detectObjectUseCase: DetectObjectUseCase(detectionTypes: [.rectangles(model: .yoloV3), .text(fastRecognition: false), .contour]))
+    private lazy var viewModel = CameraViewModel(detectObjectUseCase: DetectObjectUseCase(detectionTypes: [.rectangles(model: .yoloV3), .text(fastRecognition: false), .contour, .color]))
 
 	private var rectangleMaskLayer = CAShapeLayer()
     private var shapeMaskLayer = CAShapeLayer()

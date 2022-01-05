@@ -52,6 +52,12 @@ class CameraViewModel {
                 ContourDetection.convert(value: value)?
                     .assign(to: \.shapes, on: self)
                     .store(in: &cancellableSet)
+            case .color:
+                ColorDetection.convert(value: value)?
+                    .sink(receiveValue: { distance in
+                        print("Color distance: \(distance)")
+                    })
+                    .store(in: &cancellableSet)
             }
         }
     }

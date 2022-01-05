@@ -24,7 +24,7 @@ protocol DetectionTask {
     var result: CurrentValueSubject<ResultType, Never> { get set }
 
     /// Setup the detection task
-    func setup() throws -> VNRequest
+    func setup() throws -> VNRequest?
 
     /// Converter method for type casting the results without the need to know the actual type of the publisher
     static func convert(value: Any?) -> CurrentValueSubject<ResultType, Never>?

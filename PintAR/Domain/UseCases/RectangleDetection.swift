@@ -39,7 +39,7 @@ class RectangleDetection: DetectionTask {
 		self.model = model
 	}
 
-	func setup() throws -> VNRequest {
+	func setup() throws -> VNRequest? {
 		do {
 			let visionModel = try VNCoreMLModel(for: MLModel(contentsOf: model.modelURL))
 			self.visionModel = visionModel

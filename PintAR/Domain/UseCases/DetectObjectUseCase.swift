@@ -20,6 +20,7 @@ class DetectObjectUseCase: DetectObjectUseCaseProtocol {
         case rectangles(model: RectangleDetection.Model)
         case text(fastRecognition: Bool)
         case contour
+        case color
 	}
 
     private let detectionTypes: [DetectionType]
@@ -28,6 +29,7 @@ class DetectObjectUseCase: DetectObjectUseCaseProtocol {
 	private var requestCompletionHandler: VNImageRequestHandler?
     private var preProcessedRequestCompletionHandler: VNImageRequestHandler?
     private var cancellableSet: Set<AnyCancellable> = []
+    private let colorDetection = ColorDetection()
 
     var results: [DetectionType: Any] = [:]
 
@@ -49,6 +51,10 @@ class DetectObjectUseCase: DetectObjectUseCaseProtocol {
                     return detectionTask.setup()
                 case .contour:
                     return nil // Should be included in the preProcessedRequests
+                case .color:
+                    let detectionTask = colorDetection
+                    results[detectionType] = detectionTask.result
+                    return detectionTask.setup()
                 }
             } catch {
                 print("Setting up detection task \(detectionType) failed with \(error)")
@@ -59,13 +65,19 @@ class DetectObjectUseCase: DetectObjectUseCaseProtocol {
         // Setup contour detection in a separate VNRequestArray
         let detectionTask = ContourDetection()
         results[.contour] = detectionTask.result
-        preProcessedRequests = [detectionTask.setup()]
+        if let request = detectionTask.setup() {
+            preProcessedRequests = [request]
+        }
 	}
 
 	func recognizeObject(in image: CVPixelBuffer) {
 		self.requestCompletionHandler = VNImageRequestHandler(cvPixelBuffer: image, options: [:])
 
-        if let cgImage = ContourDetection.preprocess(buffer: image) {
+        if detectionTypes.contains(.color), let averageColor = colorDetection.getAverageColor(image: CIImage(cvPixelBuffer: image)) {
+            colorDetection.result.send(colorDetection.getRGBA(for: averageColor))
+        }
+
+        if detectionTypes.contains(.contour), let cgImage = ContourDetection.preprocess(buffer: image) {
             self.preProcessedRequestCompletionHandler = VNImageRequestHandler(cgImage: cgImage, options: [:])
             try? self.preProcessedRequestCompletionHandler?.perform(self.preProcessedRequests)
         }

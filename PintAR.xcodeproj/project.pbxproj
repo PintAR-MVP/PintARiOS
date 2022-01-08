@@ -7,20 +7,36 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0B02C8FA274D707D008F0506 /* CGPoint+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B02C8F9274D707D008F0506 /* CGPoint+Extension.swift */; };
+		0B02C8FC274D71DE008F0506 /* CameraViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B02C8FB274D71DE008F0506 /* CameraViewModel.swift */; };
+		0B02C900274D74CB008F0506 /* DetectObjectUseCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B02C8FF274D74CB008F0506 /* DetectObjectUseCase.swift */; };
+		0B02C904274D7AB2008F0506 /* Result+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B02C903274D7AB2008F0506 /* Result+Extension.swift */; };
+		0B2AC9E3274ECB9A00C2EE98 /* YOLOv3Tiny.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = 0B2AC9E2274ECB9A00C2EE98 /* YOLOv3Tiny.mlmodel */; };
 		0B40C48A2746C4D500908879 /* main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0B40C4892746C4D500908879 /* main.storyboard */; };
 		91EEE061F85B0C07D8EDB313 /* Pods_PintAR.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 33DF1B1870E6ABAFE139D29F /* Pods_PintAR.framework */; };
+		CC16AD972785CDB80016C47F /* ColorDetection.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC16AD962785CDB80016C47F /* ColorDetection.swift */; };
 		CC16C71927465AAE007E1568 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC16C71827465AAE007E1568 /* AppDelegate.swift */; };
 		CC16C71D27465AAE007E1568 /* ImageDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC16C71C27465AAE007E1568 /* ImageDetailViewController.swift */; };
 		CC16C72227465AB0007E1568 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CC16C72127465AB0007E1568 /* Assets.xcassets */; };
 		CC16C72527465AB0007E1568 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CC16C72327465AB0007E1568 /* LaunchScreen.storyboard */; };
 		CC16C72D27465C8E007E1568 /* CameraViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC16C72C27465C8E007E1568 /* CameraViewController.swift */; };
+		CC3D70822757D084008EB6AB /* ContourDetection.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC3D70812757D084008EB6AB /* ContourDetection.swift */; };
+		CCD96D422753A3C400786079 /* DetectionTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCD96D412753A3C400786079 /* DetectionTask.swift */; };
+		CCD96D442753A9EE00786079 /* RectangleDetection.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCD96D432753A9EE00786079 /* RectangleDetection.swift */; };
+		CCD96D462753A9F500786079 /* TextRecognition.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCD96D452753A9F500786079 /* TextRecognition.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		0B02C8F9274D707D008F0506 /* CGPoint+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CGPoint+Extension.swift"; sourceTree = "<group>"; };
+		0B02C8FB274D71DE008F0506 /* CameraViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraViewModel.swift; sourceTree = "<group>"; };
+		0B02C8FF274D74CB008F0506 /* DetectObjectUseCase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetectObjectUseCase.swift; sourceTree = "<group>"; };
+		0B02C903274D7AB2008F0506 /* Result+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Result+Extension.swift"; sourceTree = "<group>"; };
+		0B2AC9E2274ECB9A00C2EE98 /* YOLOv3Tiny.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = YOLOv3Tiny.mlmodel; sourceTree = "<group>"; };
 		0B40C4892746C4D500908879 /* main.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = main.storyboard; sourceTree = "<group>"; };
 		165B6C22C262B2B1B7422BDC /* Pods-PintAR.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-PintAR.debug.xcconfig"; path = "Target Support Files/Pods-PintAR/Pods-PintAR.debug.xcconfig"; sourceTree = "<group>"; };
 		33DF1B1870E6ABAFE139D29F /* Pods_PintAR.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_PintAR.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		60E5E2B9B392A09CF780013B /* Pods-PintAR.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-PintAR.release.xcconfig"; path = "Target Support Files/Pods-PintAR/Pods-PintAR.release.xcconfig"; sourceTree = "<group>"; };
+		CC16AD962785CDB80016C47F /* ColorDetection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorDetection.swift; sourceTree = "<group>"; };
 		CC16C71527465AAE007E1568 /* PintAR.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PintAR.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CC16C71827465AAE007E1568 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		CC16C71C27465AAE007E1568 /* ImageDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageDetailViewController.swift; sourceTree = "<group>"; };
@@ -28,6 +44,10 @@
 		CC16C72427465AB0007E1568 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		CC16C72627465AB0007E1568 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		CC16C72C27465C8E007E1568 /* CameraViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraViewController.swift; sourceTree = "<group>"; };
+		CC3D70812757D084008EB6AB /* ContourDetection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContourDetection.swift; sourceTree = "<group>"; };
+		CCD96D412753A3C400786079 /* DetectionTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetectionTask.swift; sourceTree = "<group>"; };
+		CCD96D432753A9EE00786079 /* RectangleDetection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RectangleDetection.swift; sourceTree = "<group>"; };
+		CCD96D452753A9F500786079 /* TextRecognition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextRecognition.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -42,6 +62,44 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		0B02C8F8274D7022008F0506 /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				0B02C8F9274D707D008F0506 /* CGPoint+Extension.swift */,
+				0B02C903274D7AB2008F0506 /* Result+Extension.swift */,
+			);
+			path = Extensions;
+			sourceTree = "<group>";
+		};
+		0B02C8FD274D738D008F0506 /* Domain */ = {
+			isa = PBXGroup;
+			children = (
+				0B02C8FE274D7393008F0506 /* UseCases */,
+			);
+			path = Domain;
+			sourceTree = "<group>";
+		};
+		0B02C8FE274D7393008F0506 /* UseCases */ = {
+			isa = PBXGroup;
+			children = (
+				CCD96D412753A3C400786079 /* DetectionTask.swift */,
+				0B02C8FF274D74CB008F0506 /* DetectObjectUseCase.swift */,
+				CCD96D432753A9EE00786079 /* RectangleDetection.swift */,
+				CC3D70812757D084008EB6AB /* ContourDetection.swift */,
+				CCD96D452753A9F500786079 /* TextRecognition.swift */,
+				CC16AD962785CDB80016C47F /* ColorDetection.swift */,
+			);
+			path = UseCases;
+			sourceTree = "<group>";
+		};
+		0B2AC9DD274EC6EA00C2EE98 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				0B2AC9E2274ECB9A00C2EE98 /* YOLOv3Tiny.mlmodel */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
 		78EDEF8CC904540640AC38B4 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
@@ -72,8 +130,11 @@
 		CC16C71727465AAE007E1568 /* PintAR */ = {
 			isa = PBXGroup;
 			children = (
+				0B2AC9DD274EC6EA00C2EE98 /* Resources */,
+				0B02C8FD274D738D008F0506 /* Domain */,
 				CC16C71827465AAE007E1568 /* AppDelegate.swift */,
-				CC16C72E2746800C007E1568 /* ViewControllers */,
+				CC16C72E2746800C007E1568 /* Presentation */,
+				0B02C8F8274D7022008F0506 /* Extensions */,
 				CC16C72127465AB0007E1568 /* Assets.xcassets */,
 				CC16C72327465AB0007E1568 /* LaunchScreen.storyboard */,
 				CC16C72627465AB0007E1568 /* Info.plist */,
@@ -82,13 +143,14 @@
 			path = PintAR;
 			sourceTree = "<group>";
 		};
-		CC16C72E2746800C007E1568 /* ViewControllers */ = {
+		CC16C72E2746800C007E1568 /* Presentation */ = {
 			isa = PBXGroup;
 			children = (
 				CC16C72C27465C8E007E1568 /* CameraViewController.swift */,
+				0B02C8FB274D71DE008F0506 /* CameraViewModel.swift */,
 				CC16C71C27465AAE007E1568 /* ImageDetailViewController.swift */,
 			);
-			path = ViewControllers;
+			path = Presentation;
 			sourceTree = "<group>";
 		};
 		EA1669FB5DA16B1445C36159 /* Frameworks */ = {
@@ -159,7 +221,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0B0383262747036600967F7B /* Info.plist in Resources */,
 				CC16C72527465AB0007E1568 /* LaunchScreen.storyboard in Resources */,
 				0B40C48A2746C4D500908879 /* main.storyboard in Resources */,
 				CC16C72227465AB0007E1568 /* Assets.xcassets in Resources */,
@@ -193,6 +254,7 @@
 		};
 		CC16C72F27468350007E1568 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -216,8 +278,18 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0B2AC9E3274ECB9A00C2EE98 /* YOLOv3Tiny.mlmodel in Sources */,
 				CC16C71D27465AAE007E1568 /* ImageDetailViewController.swift in Sources */,
+				CC3D70822757D084008EB6AB /* ContourDetection.swift in Sources */,
+				0B02C8FA274D707D008F0506 /* CGPoint+Extension.swift in Sources */,
 				CC16C72D27465C8E007E1568 /* CameraViewController.swift in Sources */,
+				CCD96D422753A3C400786079 /* DetectionTask.swift in Sources */,
+				0B02C8FC274D71DE008F0506 /* CameraViewModel.swift in Sources */,
+				CC16AD972785CDB80016C47F /* ColorDetection.swift in Sources */,
+				0B02C904274D7AB2008F0506 /* Result+Extension.swift in Sources */,
+				CCD96D442753A9EE00786079 /* RectangleDetection.swift in Sources */,
+				CCD96D462753A9F500786079 /* TextRecognition.swift in Sources */,
+				0B02C900274D74CB008F0506 /* DetectObjectUseCase.swift in Sources */,
 				CC16C71927465AAE007E1568 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

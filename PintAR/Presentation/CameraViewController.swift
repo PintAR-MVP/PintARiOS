@@ -17,7 +17,7 @@ class CameraViewController: UIViewController {
 	private let cameraView = UIView()
 	private let takePhotoButton = UIButton()
 	private let imagePickerButton = UIButton()
-    private let recognizedTextLabel = UILabel()
+	private let recognizedTextLabel = UILabel()
 	private lazy var imagePicker = UIImagePickerController()
 	private let blur = UIVisualEffectView(effect: UIBlurEffect(style: .light))
 	private var inputDevice: AVCaptureDeviceInput?
@@ -30,15 +30,16 @@ class CameraViewController: UIViewController {
 		return session
 	}()
 
-    private lazy var viewModel = CameraViewModel(detectObjectUseCase: DetectObjectUseCase(detectionTypes: [.rectangles(model: .yoloV3), .text(fastRecognition: false), .contour, .color]))
+	private lazy var viewModel = CameraViewModel(detectObjectUseCase: DetectObjectUseCase(detectionTypes: [.rectangles(model: .yoloV3), .text(fastRecognition: false), .contour, .color]))
 
 	private var rectangleMaskLayer = CAShapeLayer()
+	private var shapeMaskLayer = CAShapeLayer()
 
-    private var didShowAlert: Bool = false
+	private var didShowAlert: Bool = false
 	private var isTapped = false
 
-    var bufferSize: CGSize = .zero
-    var cancellableSet: Set<AnyCancellable> = []
+	var bufferSize: CGSize = .zero
+	var cancellableSet: Set<AnyCancellable> = []
 
 	// MARK: - Lifecycle
 	override func viewDidLoad() {
@@ -46,7 +47,7 @@ class CameraViewController: UIViewController {
 
 		self.videoDataOutput.setSampleBufferDelegate(self, queue: DispatchQueue(label: "frame_processing_queue"))
 		self.setupUI()
-        self.setupSubscribers()
+		self.setupSubscribers()
 		self.setupCameraInput()
 		self.setupCameraOutput()
 		self.viewModel.configureVision()
@@ -66,25 +67,33 @@ class CameraViewController: UIViewController {
 	private func setupUI() {
 		self.setupCameraView()
 		self.setupTakePhotoButton()
-        self.setupRecognizedTextLabel()
+		self.setupRecognizedTextLabel()
 		self.setupImageGalleryButton()
 	}
 
-    private func setupSubscribers() {
-        self.viewModel.$recognizedText
-            .map({ $0.joined(separator: " & ") })
-            .receive(on: DispatchQueue.main)
-            .assign(to: \.text, on: self.recognizedTextLabel)
-            .store(in: &cancellableSet)
+	private func setupSubscribers() {
+		self.viewModel.$recognizedText
+			.map({ $0.joined(separator: " & ") })
+			.receive(on: DispatchQueue.main)
+			.assign(to: \.text, on: self.recognizedTextLabel)
+			.store(in: &cancellableSet)
 
-        self.viewModel.$objectFrame
-            .receive(on: DispatchQueue.main)
-            .sink(receiveValue: { frame in
-                self.removeRectangleMask()
-                self.drawBoundingBox(boundingBox: frame)
-            })
-            .store(in: &cancellableSet)
-    }
+		self.viewModel.$objectFrame
+			.receive(on: DispatchQueue.main)
+			.sink(receiveValue: { frame in
+				self.removeRectangleMask()
+				self.drawBoundingBox(boundingBox: frame)
+			})
+			.store(in: &cancellableSet)
+
+		self.viewModel.$shapes
+			.receive(on: DispatchQueue.main)
+			.sink(receiveValue: { paths in
+				self.removeShapeMask()
+				self.drawContours(paths: paths)
+			})
+			.store(in: &cancellableSet)
+	}
 
 	private func setupCameraView() {
 		view.addSubview(self.cameraView)
@@ -127,21 +136,21 @@ class CameraViewController: UIViewController {
 		self.takePhotoButton.addTarget(self, action: #selector(takePhoto), for: .touchUpInside)
 	}
 
-    private func setupRecognizedTextLabel() {
-        self.view.addSubview(recognizedTextLabel)
+	private func setupRecognizedTextLabel() {
+		self.view.addSubview(recognizedTextLabel)
 
-        self.recognizedTextLabel.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            self.recognizedTextLabel.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
-            self.recognizedTextLabel.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
-            self.recognizedTextLabel.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor, constant: 20)
-        ])
+		self.recognizedTextLabel.translatesAutoresizingMaskIntoConstraints = false
+		NSLayoutConstraint.activate([
+			self.recognizedTextLabel.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
+			self.recognizedTextLabel.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
+			self.recognizedTextLabel.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor, constant: 20)
+		])
 
-        self.recognizedTextLabel.textAlignment = .center
-        self.recognizedTextLabel.textColor = .white
-        self.recognizedTextLabel.numberOfLines = 0
-        self.recognizedTextLabel.font = .preferredFont(forTextStyle: .caption1)
-    }
+		self.recognizedTextLabel.textAlignment = .center
+		self.recognizedTextLabel.textColor = .white
+		self.recognizedTextLabel.numberOfLines = 0
+		self.recognizedTextLabel.font = .preferredFont(forTextStyle: .caption1)
+	}
 
 	private func setupImageGalleryButton() {
 		self.view.addSubview(self.imagePickerButton)
@@ -199,7 +208,7 @@ class CameraViewController: UIViewController {
 			let connection = self.videoDataOutput.connection(with: AVMediaType.video),
 			connection.isVideoOrientationSupported else {
 				return
-		}
+			}
 
 		connection.videoOrientation = .portrait
 	}
@@ -325,17 +334,45 @@ extension CameraViewController {
 
 		let bounds = boundingBox.applying(scale).applying(transform)
 
-        self.rectangleMaskLayer = CAShapeLayer()
-        self.rectangleMaskLayer.frame = bounds
-        self.rectangleMaskLayer.cornerRadius = 10
-        self.rectangleMaskLayer.opacity = 1
-        self.rectangleMaskLayer.borderColor = UIColor.systemBlue.cgColor
-        self.rectangleMaskLayer.borderWidth = 6.0
-        self.cameraLiveViewLayer?.insertSublayer(self.rectangleMaskLayer, at: 1)
+		self.rectangleMaskLayer = CAShapeLayer()
+		self.rectangleMaskLayer.frame = bounds
+		self.rectangleMaskLayer.cornerRadius = 10
+		self.rectangleMaskLayer.opacity = 1
+		self.rectangleMaskLayer.borderColor = UIColor.systemBlue.cgColor
+		self.rectangleMaskLayer.borderWidth = 6.0
+		self.cameraLiveViewLayer?.insertSublayer(self.rectangleMaskLayer, at: 1)
+	}
+
+	private func drawContours(paths: [CGPath]) {
+		guard let cameraLiveViewLayer = self.cameraLiveViewLayer else {
+			return
+		}
+
+		let transform = CGAffineTransform(scaleX: 1, y: -1).translatedBy(x: 0, y: -cameraLiveViewLayer.bounds.height)
+		let scale = CGAffineTransform.identity.scaledBy(x: cameraLiveViewLayer.bounds.width, y: cameraLiveViewLayer.bounds.height)
+
+		let contourPath = CGMutablePath()
+		paths.forEach {
+			let path = UIBezierPath(cgPath: $0)
+			path.apply(scale)
+			path.apply(transform)
+			contourPath.addPath(path.cgPath)
+		}
+
+		self.shapeMaskLayer.path = contourPath
+		self.shapeMaskLayer.strokeColor = UIColor.red.cgColor
+		self.shapeMaskLayer.lineWidth = 5
+		self.shapeMaskLayer.fillColor = UIColor.clear.cgColor
+		self.cameraLiveViewLayer?.insertSublayer(self.shapeMaskLayer, at: 1)
 	}
 
 	private func removeRectangleMask() {
 		self.rectangleMaskLayer.sublayers?.removeAll()
 		self.rectangleMaskLayer.removeFromSuperlayer()
+	}
+
+	private func removeShapeMask() {
+		self.shapeMaskLayer.sublayers?.removeAll()
+		self.shapeMaskLayer.removeFromSuperlayer()
 	}
 }

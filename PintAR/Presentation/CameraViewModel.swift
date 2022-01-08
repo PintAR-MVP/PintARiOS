@@ -8,8 +8,6 @@
 import Foundation
 import Vision
 import Combine
-import AVFoundation
-import CoreImage
 
 class CameraViewModel {
 
@@ -90,13 +88,13 @@ class CameraViewModel {
 			detectedObject.image = extractedImage
 		}
 
-		for result in detectedObjects {
+		for result in self.detectedObjects {
 			guard let detectedObjectImage = result.image else {
 				continue
 			}
 
-			if let detectedObjectImageCiImage = CIImage(image: detectedObjectImage) {
-				result.color = ColorDetection().getAverageColor(image: detectedObjectImageCiImage)
+			if let detectedColor = self.detectColorUseCase.getAverageColor(image: detectedObjectImage) {
+				result.color = detectedColor
 			}
 
 			result.text = self.textRecognition.recognizeText(in: detectedObjectImage)

@@ -10,18 +10,22 @@ import UIKit
 
 protocol ColorDetectionProtocol {
 
-	func getAverageColor(image: CIImage) -> UIColor?
+	func getAverageColor(image: UIImage) -> UIColor?
 }
 
 struct ColorDetection: ColorDetectionProtocol {
 
 	typealias RGBA = (Double, Double, Double, Double)
 
-	func getAverageColor(image: CIImage) -> UIColor? {
-		// Source: https://www.hackingwithswift.com/example-code/media/how-to-read-the-average-color-of-a-uiimage-using-ciareaaverage
-		let extentVector = CIVector(x: image.extent.origin.x, y: image.extent.origin.y, z: image.extent.size.width, w: image.extent.size.height)
+	func getAverageColor(image: UIImage) -> UIColor? {
+		guard let currentImage = CIImage(image: image) else {
+			return nil
+		}
 
-		guard let filter = CIFilter(name: "CIAreaAverage", parameters: [kCIInputImageKey: image, kCIInputExtentKey: extentVector]) else { return nil }
+		// Source: https://www.hackingwithswift.com/example-code/media/how-to-read-the-average-color-of-a-uiimage-using-ciareaaverage
+		let extentVector = CIVector(x: currentImage.extent.origin.x, y: currentImage.extent.origin.y, z: currentImage.extent.size.width, w: currentImage.extent.size.height)
+
+		guard let filter = CIFilter(name: "CIAreaAverage", parameters: [kCIInputImageKey: currentImage, kCIInputExtentKey: extentVector]) else { return nil }
 
 		guard let outputImage = filter.outputImage else { return nil }
 

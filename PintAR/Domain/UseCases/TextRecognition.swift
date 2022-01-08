@@ -18,7 +18,7 @@ class TextRecognition: DetectionTask {
 		self.fastRecognition = fastRecognition
 	}
 
-	func setup() -> VNRequest {
+	func setup() -> VNRequest? {
 		let textDetectionRequest = VNRecognizeTextRequest { request, _ in
 
 			guard let observations = request.results as? [VNRecognizedTextObservation] else {

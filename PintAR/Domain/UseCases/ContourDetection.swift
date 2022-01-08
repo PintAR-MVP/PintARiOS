@@ -13,7 +13,7 @@ class ContourDetection: DetectionTask {
 
     var result = CurrentValueSubject<[CGPath], Never>([])
 
-    func setup() -> VNRequest {
+    func setup() -> VNRequest? {
         let contourRecognition = VNDetectContoursRequest { request, _ in
             guard let observations = request.results as? [VNContoursObservation] else {
                 return

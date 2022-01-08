@@ -30,7 +30,7 @@ class RectangleDetection: DetectionTask {
 		}
 	}
 
-    var result = CurrentValueSubject<(String, CGRect), Never>(("", .zero))
+	var result = CurrentValueSubject<(String, CGRect), Never>(("", .zero))
 
 	private var visionModel: VNCoreMLModel?
 	private let model: Model
@@ -39,7 +39,7 @@ class RectangleDetection: DetectionTask {
 		self.model = model
 	}
 
-	func setup() throws -> VNRequest {
+	func setup() throws -> VNRequest? {
 		do {
 			let visionModel = try VNCoreMLModel(for: MLModel(contentsOf: model.modelURL))
 			self.visionModel = visionModel
@@ -48,7 +48,7 @@ class RectangleDetection: DetectionTask {
 					return
 				}
 
-                var output: (String, CGRect) = ("", .zero)
+				var output: (String, CGRect) = ("", .zero)
 
 				for observation in results where observation is VNRecognizedObjectObservation {
 					guard let objectObservation = observation as? VNRecognizedObjectObservation else {
@@ -57,20 +57,20 @@ class RectangleDetection: DetectionTask {
 
 					// Select only the label with the highest confidence.
 					let objectClass = objectObservation.labels[0]
-//					print(objectClass.identifier)
-                    output.0 = objectClass.identifier
+					// print(objectClass.identifier)
+					output.0 = objectClass.identifier
 				}
 
-                for observation in results where observation is VNDetectedObjectObservation {
-                    guard let objectObservation = observation as? VNDetectedObjectObservation else {
-                        continue
-                    }
+				for observation in results where observation is VNDetectedObjectObservation {
+					guard let objectObservation = observation as? VNDetectedObjectObservation else {
+						continue
+					}
 
-                    output.1 = objectObservation.boundingBox
-                }
+					output.1 = objectObservation.boundingBox
+				}
 
-                self.result.value = output
-            }
+				self.result.value = output
+			}
 
 			return objectRecognition
 		} catch {
@@ -78,7 +78,7 @@ class RectangleDetection: DetectionTask {
 		}
 	}
 
-    static func convert(value: Any?) -> CurrentValueSubject<(String, CGRect), Never>? {
-        return value as? CurrentValueSubject<(String, CGRect), Never>
-    }
+	static func convert(value: Any?) -> CurrentValueSubject<(String, CGRect), Never>? {
+		return value as? CurrentValueSubject<(String, CGRect), Never>
+	}
 }

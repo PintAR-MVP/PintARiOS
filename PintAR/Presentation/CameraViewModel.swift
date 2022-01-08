@@ -13,10 +13,11 @@ class CameraViewModel {
 
 	@Published var recognizedText: [String] = []
 	@Published var objectFrame: [CGRect] = [.zero]
-	@Published var objectIdentifier: String = ""
+	@Published var objectIdentifier = [String]()
 	@Published var shapes: [CGPath] = []
 	@Published var rgb: ColorDetection.RGBA = (0, 0, 0, 0)
 
+	private let recognizeObjectQueue = DispatchQueue(label: "RecognizeObject", qos: .userInitiated)
 	private var cancellableSet: Set<AnyCancellable> = []
 	private let detectObjectUseCase: DetectObjectUseCaseProtocol
 
@@ -62,6 +63,8 @@ class CameraViewModel {
 	}
 
 	func recognizeObject(image: CVImageBuffer) {
-		self.detectObjectUseCase.recognizeObject(in: image)
+		self.recognizeObjectQueue.async {
+			self.detectObjectUseCase.recognizeObject(in: image)
+		}
 	}
 }

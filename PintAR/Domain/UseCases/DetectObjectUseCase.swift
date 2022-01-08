@@ -41,20 +41,20 @@ class DetectObjectUseCase: DetectObjectUseCaseProtocol {
 		requests = detectionTypes.compactMap({ detectionType in
 			do {
 				switch detectionType {
-					case .rectangles(let model):
-						let detectionTask = RectangleDetection(model: model)
-						results[detectionType] = detectionTask.result
-						return try detectionTask.setup()
-					case .text(let fastRecognition):
-						let detectionTask = TextRecognition(fastRecognition: fastRecognition)
-						results[detectionType] = detectionTask.result
-						return detectionTask.setup()
-					case .contour:
-						return nil // Should be included in the preProcessedRequests
-					case .color:
-						let detectionTask = colorDetection
-						results[detectionType] = detectionTask.result
-						return detectionTask.setup()
+				case .rectangles(let model):
+					let detectionTask = RectangleDetection(model: model)
+					results[detectionType] = detectionTask.result
+					return try detectionTask.setup()
+				case .text(let fastRecognition):
+					let detectionTask = TextRecognition(fastRecognition: fastRecognition)
+					results[detectionType] = detectionTask.result
+					return detectionTask.setup()
+				case .contour:
+					return nil // Should be included in the preProcessedRequests
+				case .color:
+					let detectionTask = colorDetection
+					results[detectionType] = detectionTask.result
+					return detectionTask.setup()
 				}
 			} catch {
 				print("Setting up detection task \(detectionType) failed with \(error)")

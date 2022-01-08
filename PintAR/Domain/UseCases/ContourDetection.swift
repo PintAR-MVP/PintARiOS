@@ -12,6 +12,7 @@ import CoreImage.CIFilterBuiltins
 class ContourDetection: DetectionTask {
 
     var result = CurrentValueSubject<[CGPath], Never>([])
+    static let context = CIContext()
 
     func setup() -> VNRequest? {
         let contourRecognition = VNDetectContoursRequest { request, _ in
@@ -36,7 +37,6 @@ class ContourDetection: DetectionTask {
     }
 
     static func preprocess(buffer: CVPixelBuffer) -> CGImage? {
-        let context = CIContext()
         let ciImage = CIImage(cvPixelBuffer: buffer)
 
         let noiseReductionFilter = CIFilter.gaussianBlur()

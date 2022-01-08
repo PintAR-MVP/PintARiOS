@@ -30,7 +30,7 @@ class CameraViewController: UIViewController {
 		return session
 	}()
 
-	private lazy var viewModel = CameraViewModel(detectObjectUseCase: DetectObjectUseCase(detectionTypes: [.rectangles(model: .yoloV5), .text(fastRecognition: false), .contour, .color]))
+	private lazy var viewModel = CameraViewModel(detectObjectUseCase: DetectObjectUseCase(detectionTypes: [.rectangles(model: .yoloV5), .contour]))
 
 	private var rectangleMaskLayer = CAShapeLayer()
 
@@ -70,31 +70,15 @@ class CameraViewController: UIViewController {
 		self.setupImageGalleryButton()
 	}
 
-    private func setupSubscribers() {
-        /*
-        self.viewModel.$recognizedText
-            .map({ $0.joined(separator: " & ") })
-            .receive(on: DispatchQueue.main)
-            .assign(to: \.text, on: self.recognizedTextLabel)
-            .store(in: &cancellableSet)
-        */
-        self.viewModel.$objectFrame
-            .receive(on: DispatchQueue.main)
-            .sink(receiveValue: { frame in
-                self.removeRectangleMask()
-                self.drawBoundingBox(boundingBox: frame)
-            })
-            .store(in: &cancellableSet)
-        /*
-        self.viewModel.$shapes
-            .receive(on: DispatchQueue.main)
-            .sink(receiveValue: { paths in
-                self.removeShapeMask()
-                self.drawContours(paths: paths)
-            })
-            .store(in: &cancellableSet)
-        */
-    }
+	private func setupSubscribers() {
+		self.viewModel.$objectFrame
+			.receive(on: DispatchQueue.main)
+			.sink(receiveValue: { frame in
+				self.removeRectangleMask()
+				self.drawBoundingBox(boundingBox: frame)
+			})
+			.store(in: &cancellableSet)
+	}
 
 	private func setupCameraView() {
 		view.addSubview(self.cameraView)
@@ -288,37 +272,16 @@ extension CameraViewController: AVCapturePhotoCaptureDelegate {
 extension CameraViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
 
 	func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
-		guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer), self.isTapped else {
+		guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else {
+			return
+		}
+
+		guard self.isTapped else {
+			self.viewModel.performDetectionsOnRecognisedBoundingBoxes()
 			return
 		}
 
 		self.viewModel.recognizeObject(image: pixelBuffer)
-	}
-
-	// this should be extracted from here
-	private func imageExtraction(_ observation: VNRectangleObservation, from buffer: CVImageBuffer) -> UIImage? {
-		var ciImage = CIImage(cvImageBuffer: buffer)
-
-		let topLeft = observation.topLeft.scaled(to: ciImage.extent.size)
-		let topRight = observation.topRight.scaled(to: ciImage.extent.size)
-		let bottomLeft = observation.bottomLeft.scaled(to: ciImage.extent.size)
-		let bottomRight = observation.bottomRight.scaled(to: ciImage.extent.size)
-
-		// pass filters to extract/rectify the image
-		ciImage = ciImage.applyingFilter("CIPerspectiveCorrection", parameters: [
-			"inputTopLeft": CIVector(cgPoint: topLeft),
-			"inputTopRight": CIVector(cgPoint: topRight),
-			"inputBottomLeft": CIVector(cgPoint: bottomLeft),
-			"inputBottomRight": CIVector(cgPoint: bottomRight)
-		])
-
-		let context = CIContext()
-		guard let cgImage = context.createCGImage(ciImage, from: ciImage.extent) else {
-			return nil
-		}
-
-		let output = UIImage(cgImage: cgImage)
-		return output
 	}
 }
 

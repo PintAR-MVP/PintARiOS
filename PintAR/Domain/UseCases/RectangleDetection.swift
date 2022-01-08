@@ -51,15 +51,17 @@ class RectangleDetection: DetectionTask {
                 var output: ([String], [CGRect]) = ([""], [.zero])
 
 				for observation in results where observation is VNRecognizedObjectObservation {
-                    print(observation)
-					guard let objectObservation = observation as? VNRecognizedObjectObservation else {
-						continue
+					print(observation)
+					guard
+						let objectObservation = observation as? VNRecognizedObjectObservation,
+						observation.confidence > 0.6 else {
+							continue
 					}
-                    
+
 					// Select only the label with the highest confidence.
 					let objectClass = objectObservation.labels[0]
-//					print(objectClass.identifier)
-                    output.0.append(objectClass.identifier)
+					// print(objectClass.identifier)
+					output.0.append(objectClass.identifier)
 				}
 
 				for observation in results where observation is VNDetectedObjectObservation {

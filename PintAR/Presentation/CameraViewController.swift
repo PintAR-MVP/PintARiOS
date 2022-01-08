@@ -30,7 +30,7 @@ class CameraViewController: UIViewController {
 		return session
 	}()
 
-	private lazy var viewModel = CameraViewModel(detectObjectUseCase: DetectObjectUseCase(detectionTypes: [.rectangles(model: .yoloV3), .text(fastRecognition: false), .contour, .color]))
+	private lazy var viewModel = CameraViewModel(detectObjectUseCase: DetectObjectUseCase(detectionTypes: [.rectangles(model: .yoloV5), .text(fastRecognition: false), .contour, .color]))
 
 	private var rectangleMaskLayer = CAShapeLayer()
 
@@ -119,7 +119,7 @@ class CameraViewController: UIViewController {
 			self.takePhotoButton.widthAnchor.constraint(equalTo: self.takePhotoButton.heightAnchor)
 		])
 
-		var image = UIImage(systemName: "camera", withConfiguration: UIImage.SymbolConfiguration(pointSize: 24, weight: .regular))
+		var image = UIImage(systemName: "record.circle", withConfiguration: UIImage.SymbolConfiguration(pointSize: 24, weight: .regular))
 		image = image?.withRenderingMode(.alwaysTemplate)
 
 		self.takePhotoButton.setImage(image, for: .normal)
@@ -246,7 +246,7 @@ class CameraViewController: UIViewController {
 	}
 
 	@objc private func takePhoto() {
-		self.isTapped = true
+		self.isTapped.toggle()
 	}
 
 	private func showDetailImageView(with image: UIImage?) {
@@ -288,7 +288,7 @@ extension CameraViewController: AVCapturePhotoCaptureDelegate {
 extension CameraViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
 
 	func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
-		guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else {
+		guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer), self.isTapped else {
 			return
 		}
 
@@ -322,7 +322,7 @@ extension CameraViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
 	}
 }
 
-// MARK: Draw overlays
+// MARK: - Draw overlays
 extension CameraViewController {
 
 	private func drawBoundingBox(boundingBox: [CGRect]) {
@@ -332,26 +332,21 @@ extension CameraViewController {
 
 		let transform = CGAffineTransform(scaleX: 1, y: -1).translatedBy(x: 0, y: -cameraLiveViewLayer.bounds.height)
 		let scale = CGAffineTransform.identity.scaledBy(x: cameraLiveViewLayer.bounds.width, y: cameraLiveViewLayer.bounds.height)
-        
-        
-        
-        for box in boundingBox {
-            //print(box)
-            let boxLayer = CAShapeLayer()
-            let bounds = box.applying(scale).applying(transform)
-            boxLayer.frame = bounds
-            boxLayer.cornerRadius = 10
-            boxLayer.opacity = 1
-            boxLayer.borderColor = UIColor.systemBlue.cgColor
-            boxLayer.borderWidth = 6.0
-            
-            rectangleMaskLayer.addSublayer(boxLayer)
-        }
-        
-        self.cameraLiveViewLayer?.insertSublayer(self.rectangleMaskLayer, at: 1)
-		
 
-        
+		for box in boundingBox {
+			//print(box)
+			let boxLayer = CAShapeLayer()
+			let bounds = box.applying(scale).applying(transform)
+			boxLayer.frame = bounds
+			boxLayer.cornerRadius = 10
+			boxLayer.opacity = 1
+			boxLayer.borderColor = UIColor.systemBlue.cgColor
+			boxLayer.borderWidth = 6.0
+
+			self.rectangleMaskLayer.addSublayer(boxLayer)
+		}
+
+		self.cameraLiveViewLayer?.insertSublayer(self.rectangleMaskLayer, at: 1)
 	}
 
 	private func removeRectangleMask() {

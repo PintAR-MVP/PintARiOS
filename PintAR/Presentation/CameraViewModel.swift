@@ -38,25 +38,25 @@ class CameraViewModel {
 		for key in results.keys {
 			let value = results[key]
 			switch key {
-				case .text(fastRecognition: _):
-					TextRecognition.convert(value: value)?
-						.assign(to: \.recognizedText, on: self)
-						.store(in: &cancellableSet)
-				case .rectangles(model: _):
-					RectangleDetection.convert(value: value)?
-						.sink(receiveValue: { (identifier, frame) in
-							self.objectIdentifier = identifier
-							self.objectFrame = frame
-						})
-						.store(in: &cancellableSet)
-				case .contour:
-					ContourDetection.convert(value: value)?
-						.assign(to: \.shapes, on: self)
-						.store(in: &cancellableSet)
-				case .color:
-					ColorDetection.convert(value: value)?
-						.assign(to: \.rgb, on: self)
-						.store(in: &cancellableSet)
+			case .text(fastRecognition: _):
+				TextRecognition.convert(value: value)?
+					.assign(to: \.recognizedText, on: self)
+					.store(in: &cancellableSet)
+			case .rectangles(model: _):
+				RectangleDetection.convert(value: value)?
+					.sink(receiveValue: { (identifier, frame) in
+						self.objectIdentifier = identifier
+						self.objectFrame = frame
+					})
+					.store(in: &cancellableSet)
+			case .contour:
+				ContourDetection.convert(value: value)?
+					.assign(to: \.shapes, on: self)
+					.store(in: &cancellableSet)
+			case .color:
+				ColorDetection.convert(value: value)?
+					.assign(to: \.rgb, on: self)
+					.store(in: &cancellableSet)
 			}
 		}
 	}

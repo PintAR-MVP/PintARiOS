@@ -30,12 +30,14 @@ class CameraViewController: UIViewController {
 		return session
 	}()
 
-    private lazy var viewModel = CameraViewModel(detectObjectUseCase: DetectObjectUseCase(detectionTypes: [.rectangles(model: .yoloV3), .text(fastRecognition: false)]))
+    private lazy var viewModel = CameraViewModel(detectObjectUseCase: DetectObjectUseCase(detectionTypes: [.rectangles(model: .yoloV3), .text(fastRecognition: false), .contour]))
 
-	private var didShowAlert: Bool = false
-	private var maskLayer = CAShapeLayer()
+	private var rectangleMaskLayer = CAShapeLayer()
+
+    private var didShowAlert: Bool = false
 	private var isTapped = false
-	var bufferSize: CGSize = .zero
+
+    var bufferSize: CGSize = .zero
     var cancellableSet: Set<AnyCancellable> = []
 
 	// MARK: - Lifecycle
@@ -78,9 +80,8 @@ class CameraViewController: UIViewController {
         self.viewModel.$objectFrame
             .receive(on: DispatchQueue.main)
             .sink(receiveValue: { frame in
-                self.removeMask()
+                self.removeRectangleMask()
                 self.drawBoundingBox(boundingBox: frame)
-                self.addBoundingBox()
             })
             .store(in: &cancellableSet)
     }
@@ -234,8 +235,7 @@ class CameraViewController: UIViewController {
 		present(self.imagePicker, animated: true, completion: nil)
 	}
 
-	@objc
-	private func takePhoto() {
+	@objc private func takePhoto() {
 		self.isTapped = true
 	}
 
@@ -312,7 +312,7 @@ extension CameraViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
 	}
 }
 
-// MARK: drawing Bounding Box
+// MARK: Draw overlays
 extension CameraViewController {
 
 	private func drawBoundingBox(boundingBox: CGRect) {
@@ -325,24 +325,17 @@ extension CameraViewController {
 
 		let bounds = boundingBox.applying(scale).applying(transform)
 
-		self.createLayer(in: bounds)
+        self.rectangleMaskLayer = CAShapeLayer()
+        self.rectangleMaskLayer.frame = bounds
+        self.rectangleMaskLayer.cornerRadius = 10
+        self.rectangleMaskLayer.opacity = 1
+        self.rectangleMaskLayer.borderColor = UIColor.systemBlue.cgColor
+        self.rectangleMaskLayer.borderWidth = 6.0
+        self.cameraLiveViewLayer?.insertSublayer(self.rectangleMaskLayer, at: 1)
 	}
 
-	private func createLayer(in rect: CGRect) {
-		self.maskLayer = CAShapeLayer()
-		self.maskLayer.frame = rect
-		self.maskLayer.cornerRadius = 10
-		self.maskLayer.opacity = 1
-		self.maskLayer.borderColor = UIColor.systemBlue.cgColor
-		self.maskLayer.borderWidth = 6.0
-	}
-
-	private func addBoundingBox() {
-		self.cameraLiveViewLayer?.insertSublayer(self.maskLayer, at: 1)
-	}
-
-	private func removeMask() {
-		self.maskLayer.sublayers?.removeAll()
-		self.maskLayer.removeFromSuperlayer()
+	private func removeRectangleMask() {
+		self.rectangleMaskLayer.sublayers?.removeAll()
+		self.rectangleMaskLayer.removeFromSuperlayer()
 	}
 }

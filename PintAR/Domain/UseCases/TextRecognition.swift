@@ -10,7 +10,6 @@ import Combine
 
 class TextRecognition: DetectionTask {
 
-	@Published var recognizedText: [String] = []
     var result = CurrentValueSubject<[String], Never>([])
 
     private let fastRecognition: Bool
@@ -29,7 +28,6 @@ class TextRecognition: DetectionTask {
 				return observation.topCandidates(1).first?.string
 			}
 
-			self.recognizedText = recognizedStrings
             self.result.value = recognizedStrings
 		}
 
@@ -38,7 +36,7 @@ class TextRecognition: DetectionTask {
 		return textDetectionRequest
 	}
 
-    static func convert(value: Any?) -> CurrentValueSubject<Array<String>, Never>? {
-        return value as? CurrentValueSubject<Array<String>, Never>
+    static func convert(value: Any?) -> CurrentValueSubject<[String], Never>? {
+        return value as? CurrentValueSubject<[String], Never>
     }
 }

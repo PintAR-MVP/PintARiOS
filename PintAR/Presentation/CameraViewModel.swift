@@ -14,6 +14,7 @@ class CameraViewModel {
     @Published var recognizedText: [String] = []
     @Published var objectFrame: CGRect = .zero
     @Published var objectIdentifier: String = ""
+    @Published var shapes: [CGPath] = []
 
     private var cancellableSet: Set<AnyCancellable> = []
     private let detectObjectUseCase: DetectObjectUseCaseProtocol
@@ -46,6 +47,10 @@ class CameraViewModel {
                         self.objectIdentifier = identifier
                         self.objectFrame = frame
                     })
+                    .store(in: &cancellableSet)
+            case .contour:
+                ContourDetection.convert(value: value)?
+                    .assign(to: \.shapes, on: self)
                     .store(in: &cancellableSet)
             }
         }

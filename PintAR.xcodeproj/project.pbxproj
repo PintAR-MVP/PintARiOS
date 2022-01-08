@@ -19,6 +19,7 @@
 		CC16C72227465AB0007E1568 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CC16C72127465AB0007E1568 /* Assets.xcassets */; };
 		CC16C72527465AB0007E1568 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CC16C72327465AB0007E1568 /* LaunchScreen.storyboard */; };
 		CC16C72D27465C8E007E1568 /* CameraViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC16C72C27465C8E007E1568 /* CameraViewController.swift */; };
+		CC3D70822757D084008EB6AB /* ContourDetection.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC3D70812757D084008EB6AB /* ContourDetection.swift */; };
 		CCD96D422753A3C400786079 /* DetectionTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCD96D412753A3C400786079 /* DetectionTask.swift */; };
 		CCD96D442753A9EE00786079 /* RectangleDetection.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCD96D432753A9EE00786079 /* RectangleDetection.swift */; };
 		CCD96D462753A9F500786079 /* TextRecognition.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCD96D452753A9F500786079 /* TextRecognition.swift */; };
@@ -41,6 +42,7 @@
 		CC16C72427465AB0007E1568 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		CC16C72627465AB0007E1568 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		CC16C72C27465C8E007E1568 /* CameraViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraViewController.swift; sourceTree = "<group>"; };
+		CC3D70812757D084008EB6AB /* ContourDetection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContourDetection.swift; sourceTree = "<group>"; };
 		CCD96D412753A3C400786079 /* DetectionTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetectionTask.swift; sourceTree = "<group>"; };
 		CCD96D432753A9EE00786079 /* RectangleDetection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RectangleDetection.swift; sourceTree = "<group>"; };
 		CCD96D452753A9F500786079 /* TextRecognition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextRecognition.swift; sourceTree = "<group>"; };
@@ -81,6 +83,7 @@
 				CCD96D412753A3C400786079 /* DetectionTask.swift */,
 				0B02C8FF274D74CB008F0506 /* DetectObjectUseCase.swift */,
 				CCD96D432753A9EE00786079 /* RectangleDetection.swift */,
+				CC3D70812757D084008EB6AB /* ContourDetection.swift */,
 				CCD96D452753A9F500786079 /* TextRecognition.swift */,
 			);
 			path = UseCases;
@@ -248,6 +251,7 @@
 		};
 		CC16C72F27468350007E1568 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -273,6 +277,7 @@
 			files = (
 				0B2AC9E3274ECB9A00C2EE98 /* YOLOv3Tiny.mlmodel in Sources */,
 				CC16C71D27465AAE007E1568 /* ImageDetailViewController.swift in Sources */,
+				CC3D70822757D084008EB6AB /* ContourDetection.swift in Sources */,
 				0B02C8FA274D707D008F0506 /* CGPoint+Extension.swift in Sources */,
 				CC16C72D27465C8E007E1568 /* CameraViewController.swift in Sources */,
 				CCD96D422753A3C400786079 /* DetectionTask.swift in Sources */,

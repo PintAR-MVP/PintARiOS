@@ -30,7 +30,7 @@ class CameraViewController: UIViewController {
 		return session
 	}()
 
-	private lazy var viewModel = CameraViewModel(detectObjectUseCase: DetectObjectUseCase(detectionTypes: [.rectangles(model: .yoloV3), .text(fastRecognition: false), .contour, .color]))
+	private lazy var viewModel = CameraViewModel(detectObjectUseCase: DetectObjectUseCase(detectionTypes: [.rectangles(model: .yoloV5), .contour]))
 
 	private var rectangleMaskLayer = CAShapeLayer()
 
@@ -71,12 +71,6 @@ class CameraViewController: UIViewController {
 	}
 
 	private func setupSubscribers() {
-		self.viewModel.$recognizedText
-			.map({ $0.joined(separator: " & ") })
-			.receive(on: DispatchQueue.main)
-			.assign(to: \.text, on: self.recognizedTextLabel)
-			.store(in: &cancellableSet)
-
 		self.viewModel.$objectFrame
 			.receive(on: DispatchQueue.main)
 			.sink(receiveValue: { frame in
@@ -109,7 +103,7 @@ class CameraViewController: UIViewController {
 			self.takePhotoButton.widthAnchor.constraint(equalTo: self.takePhotoButton.heightAnchor)
 		])
 
-		var image = UIImage(systemName: "camera", withConfiguration: UIImage.SymbolConfiguration(pointSize: 24, weight: .regular))
+		var image = UIImage(systemName: "record.circle", withConfiguration: UIImage.SymbolConfiguration(pointSize: 24, weight: .regular))
 		image = image?.withRenderingMode(.alwaysTemplate)
 
 		self.takePhotoButton.setImage(image, for: .normal)
@@ -236,7 +230,7 @@ class CameraViewController: UIViewController {
 	}
 
 	@objc private func takePhoto() {
-		self.isTapped = true
+		self.isTapped.toggle()
 	}
 
 	private func showDetailImageView(with image: UIImage?) {
@@ -282,40 +276,19 @@ extension CameraViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
 			return
 		}
 
-		self.viewModel.recognizeObject(image: pixelBuffer)
-	}
-
-	// this should be extracted from here
-	private func imageExtraction(_ observation: VNRectangleObservation, from buffer: CVImageBuffer) -> UIImage? {
-		var ciImage = CIImage(cvImageBuffer: buffer)
-
-		let topLeft = observation.topLeft.scaled(to: ciImage.extent.size)
-		let topRight = observation.topRight.scaled(to: ciImage.extent.size)
-		let bottomLeft = observation.bottomLeft.scaled(to: ciImage.extent.size)
-		let bottomRight = observation.bottomRight.scaled(to: ciImage.extent.size)
-
-		// pass filters to extract/rectify the image
-		ciImage = ciImage.applyingFilter("CIPerspectiveCorrection", parameters: [
-			"inputTopLeft": CIVector(cgPoint: topLeft),
-			"inputTopRight": CIVector(cgPoint: topRight),
-			"inputBottomLeft": CIVector(cgPoint: bottomLeft),
-			"inputBottomRight": CIVector(cgPoint: bottomRight)
-		])
-
-		let context = CIContext()
-		guard let cgImage = context.createCGImage(ciImage, from: ciImage.extent) else {
-			return nil
+		guard self.isTapped else {
+			self.viewModel.performDetectionsOnRecognisedBoundingBoxes()
+			return
 		}
 
-		let output = UIImage(cgImage: cgImage)
-		return output
+		self.viewModel.recognizeObject(image: pixelBuffer)
 	}
 }
 
-// MARK: Draw overlays
+// MARK: - Draw overlays
 extension CameraViewController {
 
-	private func drawBoundingBox(boundingBox: CGRect) {
+	private func drawBoundingBox(boundingBox: [CGRect]) {
 		guard let cameraLiveViewLayer = self.cameraLiveViewLayer else {
 			return
 		}
@@ -323,14 +296,19 @@ extension CameraViewController {
 		let transform = CGAffineTransform(scaleX: 1, y: -1).translatedBy(x: 0, y: -cameraLiveViewLayer.bounds.height)
 		let scale = CGAffineTransform.identity.scaledBy(x: cameraLiveViewLayer.bounds.width, y: cameraLiveViewLayer.bounds.height)
 
-		let bounds = boundingBox.applying(scale).applying(transform)
+		for box in boundingBox {
+			//print(box)
+			let boxLayer = CAShapeLayer()
+			let bounds = box.applying(scale).applying(transform)
+			boxLayer.frame = bounds
+			boxLayer.cornerRadius = 10
+			boxLayer.opacity = 1
+			boxLayer.borderColor = UIColor.systemBlue.cgColor
+			boxLayer.borderWidth = 6.0
 
-		self.rectangleMaskLayer = CAShapeLayer()
-		self.rectangleMaskLayer.frame = bounds
-		self.rectangleMaskLayer.cornerRadius = 10
-		self.rectangleMaskLayer.opacity = 1
-		self.rectangleMaskLayer.borderColor = UIColor.systemBlue.cgColor
-		self.rectangleMaskLayer.borderWidth = 6.0
+			self.rectangleMaskLayer.addSublayer(boxLayer)
+		}
+
 		self.cameraLiveViewLayer?.insertSublayer(self.rectangleMaskLayer, at: 1)
 	}
 

@@ -8,11 +8,13 @@
 import Vision
 import Combine
 import CoreImage.CIFilterBuiltins
+import UIKit
 
 class ContourDetection: DetectionTask {
 
     var result = CurrentValueSubject<[CGPath], Never>([])
     static let context = CIContext()
+	private let contextt = CIContext()
 
     func setup() -> VNRequest? {
         let contourRecognition = VNDetectContoursRequest { request, _ in

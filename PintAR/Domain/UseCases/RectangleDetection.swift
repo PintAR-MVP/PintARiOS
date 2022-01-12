@@ -11,26 +11,27 @@ import Combine
 class RectangleDetection: DetectionTask {
 
 	enum Model {
-		case yoloV3
+		case yoloV5
 
 		var name: String {
 			switch self {
-			case .yoloV3:
-				return "YOLOv3Tiny"
+			case .yoloV5:
+				return "YOLOv5-train"
 			}
 		}
 
 		var modelURL: URL {
 			let url: URL?
 			switch self {
-			case .yoloV3:
+			case .yoloV5:
 				url = Bundle.main.url(forResource: self.name, withExtension: "mlmodelc")
 			}
+
 			return url ?? URL(fileURLWithPath: "")
 		}
 	}
 
-	var result = CurrentValueSubject<(String, CGRect), Never>(("", .zero))
+	var result = CurrentValueSubject<[DetectedObject], Never>([DetectedObject]())
 
 	private var visionModel: VNCoreMLModel?
 	private let model: Model
@@ -48,25 +49,14 @@ class RectangleDetection: DetectionTask {
 					return
 				}
 
-				var output: (String, CGRect) = ("", .zero)
-
-				for observation in results where observation is VNRecognizedObjectObservation {
-					guard let objectObservation = observation as? VNRecognizedObjectObservation else {
-						continue
-					}
-
-					// Select only the label with the highest confidence.
-					let objectClass = objectObservation.labels[0]
-					// print(objectClass.identifier)
-					output.0 = objectClass.identifier
-				}
-
+				var output = [DetectedObject]()
 				for observation in results where observation is VNDetectedObjectObservation {
 					guard let objectObservation = observation as? VNDetectedObjectObservation else {
 						continue
 					}
 
-					output.1 = objectObservation.boundingBox
+					let currentDetectedObject = DetectedObject(id: observation.uuid, boundingBox: objectObservation.boundingBox)
+					output.append(currentDetectedObject)
 				}
 
 				self.result.value = output
@@ -78,7 +68,7 @@ class RectangleDetection: DetectionTask {
 		}
 	}
 
-	static func convert(value: Any?) -> CurrentValueSubject<(String, CGRect), Never>? {
-		return value as? CurrentValueSubject<(String, CGRect), Never>
+	static func convert(value: Any?) -> CurrentValueSubject<[DetectedObject], Never>? {
+		return value as? CurrentValueSubject<[DetectedObject], Never>
 	}
 }

@@ -81,6 +81,11 @@ class CameraViewModel {
 
 		for rectangleObservation in rectangleObservations {
 			guard let extractedImage = self.extractImageUseCase.imageExtraction(rectangleObservation.value, from: currentImage) else {
+				// remove the detected objects where we cant extract the image
+				if let index = self.detectedObjects.firstIndex(of: rectangleObservation.key) {
+					self.detectedObjects.remove(at: index)
+				}
+
 				continue
 			}
 

@@ -12,8 +12,6 @@ import Combine
 class CameraViewModel {
 
 	@Published var objectFrame: [CGRect] = [.zero]
-	@Published var shapes: [CGPath] = []
-	@Published var rgb: ColorDetection.RGBA = (0, 0, 0, 0)
 
 	private let recognizeObjectQueue = DispatchQueue(label: "RecognizeObject", qos: .userInitiated)
 	private var cancellableSet: Set<AnyCancellable> = []
@@ -21,6 +19,7 @@ class CameraViewModel {
 	private let extractImageUseCase: ExtractImageUseCaseProtocol = ExtractImageUseCase()
 	private let detectColorUseCase: ColorDetectionProtocol = ColorDetection()
 	private let textRecognition: TextRecognitionProtocol = TextRecognition(fastRecognition: false)
+	private let shapeRecognition: ContourDetection = ContourDetection()
 
 	/// Represents the image captured by the camera where the object will be recognised
 	private var recognisedObjectContainerImage: CVImageBuffer?
@@ -50,10 +49,6 @@ class CameraViewModel {
 						self.detectedObjects = detectedObjects
 						self.performDetectionsOnRecognisedBoundingBoxes()
 					})
-					.store(in: &cancellableSet)
-			case .contour:
-				ContourDetection.convert(value: value)?
-					.assign(to: \.shapes, on: self)
 					.store(in: &cancellableSet)
 			}
 		}
@@ -100,6 +95,10 @@ class CameraViewModel {
 
 			if let detectedColor = self.detectColorUseCase.getAverageColor(image: detectedObjectImage) {
 				result.color = detectedColor
+			}
+
+			if let preProcessImage = self.shapeRecognition.preprocess(buffer: detectedObjectImage) {
+				result.shape = self.shapeRecognition.recognizeShape(in: preProcessImage)
 			}
 
 			result.text = self.textRecognition.recognizeText(in: detectedObjectImage)

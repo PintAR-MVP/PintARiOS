@@ -38,7 +38,7 @@ struct TextRecognition: TextRecognitionProtocol {
 
 		let handler = VNImageRequestHandler(cgImage: currentImage, options: [:])
 		try? handler.perform([textDetectionRequest])
-		guard let results = textDetectionRequest.results  else {
+		guard let results = textDetectionRequest.results else {
 			return nil
 		}
 

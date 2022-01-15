@@ -48,7 +48,7 @@ class CameraViewModel {
 				RectangleDetection.convert(value: value)?
 					.sink(receiveValue: { (detectedObjects) in
 						self.detectedObjects = detectedObjects
-						self.objectFrame = detectedObjects.map({ $0.boundingBox })
+						self.performDetectionsOnRecognisedBoundingBoxes()
 					})
 					.store(in: &cancellableSet)
 			case .contour:
@@ -105,7 +105,9 @@ class CameraViewModel {
 			result.text = self.textRecognition.recognizeText(in: detectedObjectImage)
 		}
 
-		let accurate = self.detectedObjects.filter({ $0.text?.isEmpty == false || $0.image == nil })
+		let accurate = self.detectedObjects.filter({ $0.image != nil && $0.text != nil })
+
+		self.objectFrame = accurate.map({ $0.boundingBox })
 		print(accurate.count)
 	}
 }

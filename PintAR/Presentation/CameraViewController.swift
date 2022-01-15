@@ -276,11 +276,6 @@ extension CameraViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
 			return
 		}
 
-		guard self.isTapped else {
-			self.viewModel.performDetectionsOnRecognisedBoundingBoxes()
-			return
-		}
-
 		self.viewModel.recognizeObject(image: pixelBuffer)
 	}
 }

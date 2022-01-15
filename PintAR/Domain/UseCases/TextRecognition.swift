@@ -49,6 +49,6 @@ struct TextRecognition: TextRecognitionProtocol {
 			}
 		}
 
-		return resultString
+		return resultString.isEmpty ? nil : resultString
 	}
 }

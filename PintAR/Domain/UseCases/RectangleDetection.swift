@@ -51,7 +51,7 @@ class RectangleDetection: DetectionTask {
 
 				var output = [DetectedObject]()
 				for observation in results where observation is VNDetectedObjectObservation {
-					guard let objectObservation = observation as? VNDetectedObjectObservation else {
+					guard let objectObservation = observation as? VNDetectedObjectObservation, observation.confidence > 0.7 else {
 						continue
 					}
 

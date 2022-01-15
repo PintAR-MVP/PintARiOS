@@ -25,7 +25,7 @@ class DetectObjectUseCase: DetectObjectUseCaseProtocol {
 	private let detectionTypes: [DetectionType]
 	private var requests = [VNRequest]()
 	private var preProcessedRequests = [VNRequest]()
-	private var requestCompletionHandler: VNSequenceRequestHandler?
+	private var requestCompletionHandler: VNImageRequestHandler?
 	private var preProcessedRequestCompletionHandler: VNImageRequestHandler?
 	private var cancellableSet: Set<AnyCancellable> = []
 	private let colorDetection = ColorDetection()
@@ -62,13 +62,13 @@ class DetectObjectUseCase: DetectObjectUseCaseProtocol {
 	}
 
 	func recognizeObject(in image: CVPixelBuffer) {
-		self.requestCompletionHandler = VNSequenceRequestHandler()
+		self.requestCompletionHandler = VNImageRequestHandler(cvPixelBuffer: image, orientation: .up, options: [:])
 
 		if detectionTypes.contains(.contour), let cgImage = ContourDetection.preprocess(buffer: image) {
 			self.preProcessedRequestCompletionHandler = VNImageRequestHandler(cgImage: cgImage, options: [:])
 			try? self.preProcessedRequestCompletionHandler?.perform(self.preProcessedRequests)
 		}
 
-		try? self.requestCompletionHandler?.perform(self.requests, on: image)
+		try? self.requestCompletionHandler?.perform(self.requests)
 	}
 }

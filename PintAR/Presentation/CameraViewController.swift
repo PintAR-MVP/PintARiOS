@@ -284,15 +284,16 @@ extension CameraViewController: AVCaptureVideoDataOutputSampleBufferDelegate {
 extension CameraViewController {
 
 	private func drawBoundingBox(boundingBox: [CGRect]) {
-		guard let cameraLiveViewLayer = self.cameraLiveViewLayer else {
-			return
+		guard
+			let cameraLiveViewLayer = self.cameraLiveViewLayer,
+			boundingBox.isEmpty == false else {
+				return
 		}
 
 		let transform = CGAffineTransform(scaleX: 1, y: -1).translatedBy(x: 0, y: -cameraLiveViewLayer.bounds.height)
 		let scale = CGAffineTransform.identity.scaledBy(x: cameraLiveViewLayer.bounds.width, y: cameraLiveViewLayer.bounds.height)
 
 		for box in boundingBox {
-			//print(box)
 			let boxLayer = CAShapeLayer()
 			let bounds = box.applying(scale).applying(transform)
 			boxLayer.frame = bounds

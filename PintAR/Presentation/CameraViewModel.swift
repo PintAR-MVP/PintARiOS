@@ -65,7 +65,8 @@ class CameraViewModel {
 		guard
 			let currentImage = self.recognisedObjectContainerImage,
 			self.detectedObjects.isEmpty == false else {
-			return
+				self.objectFrame = []
+				return
 		}
 
 		var rectangleObservations = [DetectedObject: VNRectangleObservation]()

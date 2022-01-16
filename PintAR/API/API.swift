@@ -50,7 +50,7 @@ enum API {
     /// - Parameter query: Filters for querying the product database
     /// - Throws: API error if something went wrong
     /// - Returns: Publisher with products
-    static func search(with query: SearchQuery) -> AnyPublisher<Products, APIError> {
+    static func search(with query: SearchQuery) -> AnyPublisher<[Product], APIError> {
         // Construct URL Request
         guard let url = constructURL(for: "search") else {
             return Fail(error: APIError.invalidURL).eraseToAnyPublisher()
@@ -93,6 +93,7 @@ enum API {
                     return APIError.apiError(message: error.localizedDescription.debugDescription)
                 }
             }
+            .map { $0.matches }
             .share()
             .eraseToAnyPublisher()
     }

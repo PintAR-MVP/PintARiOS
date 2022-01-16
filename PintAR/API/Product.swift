@@ -8,9 +8,9 @@
 import Foundation
 
 struct Product: Codable {
-    var id: String
-    var name: String
-    var score: Double
+    let id: String
+    let name: String
+    let score: Double
 }
 
 struct Products: Codable {

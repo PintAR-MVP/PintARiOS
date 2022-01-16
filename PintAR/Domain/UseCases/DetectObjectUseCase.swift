@@ -19,14 +19,11 @@ class DetectObjectUseCase: DetectObjectUseCaseProtocol {
 
 	enum DetectionType: Hashable {
 		case rectangles(model: RectangleDetection.Model)
-		case contour
 	}
 
 	private let detectionTypes: [DetectionType]
 	private var requests = [VNRequest]()
-	private var preProcessedRequests = [VNRequest]()
-	private var requestCompletionHandler: VNSequenceRequestHandler?
-	private var preProcessedRequestCompletionHandler: VNImageRequestHandler?
+	private var requestCompletionHandler: VNImageRequestHandler?
 	private var cancellableSet: Set<AnyCancellable> = []
 	private let colorDetection = ColorDetection()
 
@@ -42,33 +39,19 @@ class DetectObjectUseCase: DetectObjectUseCaseProtocol {
 				switch detectionType {
 				case .rectangles(let model):
 					let detectionTask = RectangleDetection(model: model)
-					results[detectionType] = detectionTask.result
+					self.results[detectionType] = detectionTask.result
 					return try detectionTask.setup()
-				case .contour:
-					return nil // Should be included in the preProcessedRequests
 				}
 			} catch {
 				print("Setting up detection task \(detectionType) failed with \(error)")
 				return nil
 			}
 		})
-
-		// Setup contour detection in a separate VNRequestArray
-		let detectionTask = ContourDetection()
-		results[.contour] = detectionTask.result
-		if let request = detectionTask.setup() {
-			preProcessedRequests = [request]
-		}
 	}
 
 	func recognizeObject(in image: CVPixelBuffer) {
-		self.requestCompletionHandler = VNSequenceRequestHandler()
+		self.requestCompletionHandler = VNImageRequestHandler(cvPixelBuffer: image, orientation: .up, options: [:])
 
-		if detectionTypes.contains(.contour), let cgImage = ContourDetection.preprocess(buffer: image) {
-			self.preProcessedRequestCompletionHandler = VNImageRequestHandler(cgImage: cgImage, options: [:])
-			try? self.preProcessedRequestCompletionHandler?.perform(self.preProcessedRequests)
-		}
-
-		try? self.requestCompletionHandler?.perform(self.requests, on: image)
+		try? self.requestCompletionHandler?.perform(self.requests)
 	}
 }

@@ -12,8 +12,6 @@ import Combine
 class CameraViewModel {
 
 	@Published var objectFrame: [CGRect] = [.zero]
-	@Published var shapes: [CGPath] = []
-	@Published var rgb: ColorDetection.RGBA = (0, 0, 0, 0)
 
 	private let recognizeObjectQueue = DispatchQueue(label: "RecognizeObject", qos: .userInitiated)
 	private var cancellableSet: Set<AnyCancellable> = []
@@ -21,6 +19,7 @@ class CameraViewModel {
 	private let extractImageUseCase: ExtractImageUseCaseProtocol = ExtractImageUseCase()
 	private let detectColorUseCase: ColorDetectionProtocol = ColorDetection()
 	private let textRecognition: TextRecognitionProtocol = TextRecognition(fastRecognition: false)
+	private let shapeRecognition: ContourDetection = ContourDetection()
 
 	/// Represents the image captured by the camera where the object will be recognised
 	private var recognisedObjectContainerImage: CVImageBuffer?
@@ -48,12 +47,8 @@ class CameraViewModel {
 				RectangleDetection.convert(value: value)?
 					.sink(receiveValue: { (detectedObjects) in
 						self.detectedObjects = detectedObjects
-						self.objectFrame = detectedObjects.map({ $0.boundingBox })
+						self.performDetectionsOnRecognisedBoundingBoxes()
 					})
-					.store(in: &cancellableSet)
-			case .contour:
-				ContourDetection.convert(value: value)?
-					.assign(to: \.shapes, on: self)
 					.store(in: &cancellableSet)
 			}
 		}
@@ -70,7 +65,8 @@ class CameraViewModel {
 		guard
 			let currentImage = self.recognisedObjectContainerImage,
 			self.detectedObjects.isEmpty == false else {
-			return
+				self.objectFrame = []
+				return
 		}
 
 		var rectangleObservations = [DetectedObject: VNRectangleObservation]()
@@ -81,6 +77,11 @@ class CameraViewModel {
 
 		for rectangleObservation in rectangleObservations {
 			guard let extractedImage = self.extractImageUseCase.imageExtraction(rectangleObservation.value, from: currentImage) else {
+				// remove the detected objects where we cant extract the image
+				if let index = self.detectedObjects.firstIndex(of: rectangleObservation.key) {
+					self.detectedObjects.remove(at: index)
+				}
+
 				continue
 			}
 
@@ -97,10 +98,16 @@ class CameraViewModel {
 				result.color = detectedColor
 			}
 
+			if let preProcessImage = self.shapeRecognition.preprocess(buffer: detectedObjectImage) {
+				result.shape = self.shapeRecognition.recognizeShape(in: preProcessImage)
+			}
+
 			result.text = self.textRecognition.recognizeText(in: detectedObjectImage)
 		}
 
-		let accurate = self.detectedObjects.filter({ $0.text?.isEmpty == false || $0.image == nil })
+		let accurate = self.detectedObjects.filter({ $0.image != nil && $0.text != nil })
+
+		self.objectFrame = accurate.map({ $0.boundingBox })
 		print(accurate.count)
 	}
 }

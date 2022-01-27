@@ -63,36 +63,6 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 			.store(in: &cancellableSet)
 	}
 
-	func buffer(from image: UIImage) -> CVPixelBuffer? {
-		let attrs = [kCVPixelBufferCGImageCompatibilityKey: kCFBooleanTrue, kCVPixelBufferCGBitmapContextCompatibilityKey: kCFBooleanTrue] as CFDictionary
-		var pixelBuffer : CVPixelBuffer?
-		let status = CVPixelBufferCreate(kCFAllocatorDefault, Int(image.size.width), Int(image.size.height), kCVPixelFormatType_32ARGB, attrs, &pixelBuffer)
-		guard (status == kCVReturnSuccess) else {
-			return nil
-		}
-
-		// swiftlint:disable:next force_unwrapping
-		CVPixelBufferLockBaseAddress(pixelBuffer!, CVPixelBufferLockFlags(rawValue: 0))
-		// swiftlint:disable:next force_unwrapping
-		let pixelData = CVPixelBufferGetBaseAddress(pixelBuffer!)
-
-		let rgbColorSpace = CGColorSpaceCreateDeviceRGB()
-		// swiftlint:disable:next force_unwrapping
-		let context = CGContext(data: pixelData, width: Int(image.size.width), height: Int(image.size.height), bitsPerComponent: 8, bytesPerRow: CVPixelBufferGetBytesPerRow(pixelBuffer!), space: rgbColorSpace, bitmapInfo: CGImageAlphaInfo.noneSkipFirst.rawValue)
-
-		context?.translateBy(x: 0, y: image.size.height)
-		context?.scaleBy(x: 1.0, y: -1.0)
-
-		// swiftlint:disable:next force_unwrapping
-		UIGraphicsPushContext(context!)
-		image.draw(in: CGRect(x: 0, y: 0, width: image.size.width, height: image.size.height))
-		UIGraphicsPopContext()
-		// swiftlint:disable:next force_unwrapping
-		CVPixelBufferUnlockBaseAddress(pixelBuffer!, CVPixelBufferLockFlags(rawValue: 0))
-
-		return pixelBuffer
-	}
-
 	// Pass camera frames received from ARKit to Vision (when not already processing one)
 	/// - Tag: ConsumeARFrames
 	func session(_ session: ARSession, didUpdate frame: ARFrame) {
@@ -105,7 +75,7 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 
 		// Retain the image buffer for Vision processing.
 		self.currentBuffer = frame.capturedImage
-		guard let buff = self.buffer(from: sceneView.snapshot()) else {
+		guard let buff = self.sceneView.snapshot().transformImageToBuffer() else {
 			debugPrint("Nop")
 			return
 		}
@@ -119,7 +89,6 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 				continue
 			}
 
-			// Get the affine transform to convert between normalized image coordinates and view coordinates
 			// Get the affine transform to convert between normalized image coordinates and view coordinates
 			let fromCameraImageToViewTransform = currentFrame.displayTransform(for: .portrait, viewportSize: viewportSize)
 			// The observation's bounding box in normalized image coordinates
@@ -165,7 +134,6 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 	}
 
 	func renderer(_ renderer: SCNSceneRenderer, willRenderScene scene: SCNScene, atTime time: TimeInterval) {
-
 	}
 
 	func renderer(_ renderer: SCNSceneRenderer, nodeFor anchor: ARAnchor) -> SCNNode? {

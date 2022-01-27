@@ -48,7 +48,6 @@ class CameraViewModel {
 					.sink(receiveValue: { (detectedObjects) in
 						self.detectedObjects = detectedObjects
 						self.performDetectionsOnRecognisedBoundingBoxes()
-
 					})
 					.store(in: &cancellableSet)
 			}

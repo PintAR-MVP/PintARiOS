@@ -50,6 +50,7 @@ class DetectObjectUseCase: DetectObjectUseCaseProtocol {
 	}
 
 	func recognizeObject(in image: CVPixelBuffer) {
+
 		self.requestCompletionHandler = VNImageRequestHandler(cvPixelBuffer: image, orientation: .up, options: [:])
 
 		try? self.requestCompletionHandler?.perform(self.requests)

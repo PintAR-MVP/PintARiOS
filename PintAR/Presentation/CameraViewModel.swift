@@ -23,7 +23,7 @@ class CameraViewModel {
 
 	/// Represents the image captured by the camera where the object will be recognised
 	private var recognisedObjectContainerImage: CVImageBuffer?
-	private var detectedObjects = [DetectedObject]()
+	private(set) var detectedObjects = [DetectedObject]()
 
 	init(detectObjectUseCase: DetectObjectUseCaseProtocol) {
 		self.detectObjectUseCase = detectObjectUseCase
@@ -48,6 +48,7 @@ class CameraViewModel {
 					.sink(receiveValue: { (detectedObjects) in
 						self.detectedObjects = detectedObjects
 						self.performDetectionsOnRecognisedBoundingBoxes()
+
 					})
 					.store(in: &cancellableSet)
 			}

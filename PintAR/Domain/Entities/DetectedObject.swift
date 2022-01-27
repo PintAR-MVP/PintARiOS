@@ -27,10 +27,10 @@ class DetectedObject: Identifiable {
 extension DetectedObject: Hashable {
 
 	static func == (lhs: DetectedObject, rhs: DetectedObject) -> Bool {
-		return lhs.id == rhs.id && lhs.boundingBox == rhs.boundingBox
+		return lhs.boundingBox == rhs.boundingBox
 	}
 
 	func hash(into hasher: inout Hasher) {
-		hasher.combine(self.id)
+//		hasher.combine(self.boundingBox)
 	}
 }

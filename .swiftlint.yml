@@ -228,7 +228,6 @@ opt_in_rules:
 
   - convenience_type
   - modifier_order
-  - prohibited_interface_builder
   - toggle_bool
   - identical_operands
 

@@ -28,7 +28,7 @@ struct ContourDetection {
 			return nil
 		}
 
-		if let transformedImage = self.context.createCGImage(outputImage, from: outputImage.extent) {
+ 		if let transformedImage = self.context.createCGImage(outputImage, from: outputImage.extent) {
 			return transformedImage
 		}
 

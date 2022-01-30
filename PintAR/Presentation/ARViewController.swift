@@ -8,8 +8,14 @@
 import UIKit
 import ARKit
 import Combine
+import RealityKit
 
 class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSessionDelegate, ARSCNViewDelegate {
+
+	private enum SessionState {
+		case settingUp
+		case ready
+	}
 
 	@IBOutlet private var sceneView: ARSCNView!
 
@@ -17,12 +23,14 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 	private var cameraLiveViewLayer: SKScene?
 	private var rectangleMaskLayer = CAShapeLayer()
 	private var addedAnchors = Set<DetectedObject>()
+	private var sessionState: SessionState = .settingUp
 
 	// The pixel buffer being held for analysis; used to serialize Vision requests.
 	private var currentBuffer: CVPixelBuffer?
 	private lazy var viewModel = CameraViewModel(detectObjectUseCase: DetectObjectUseCase(detectionTypes: [.rectangles(model: .yoloV5)]))
 	var bufferSize: CGSize = .zero
 	var cancellableSet: Set<AnyCancellable> = []
+	private let coachingOverlay = ARCoachingOverlayView()
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
@@ -32,8 +40,9 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 		self.sceneView.showsStatistics = true
 		self.sceneView.delegate = self
 		self.sceneView.session.delegate = self
-		viewportSize = sceneView.frame.size
-		sceneView.debugOptions = [.showFeaturePoints]
+		self.viewportSize = sceneView.frame.size
+		// Set up coaching overlay.
+		self.setupCoachingOverlay()
 	}
 
 	override func viewDidLayoutSubviews() {
@@ -47,6 +56,7 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 
 		// Create a session configuration
 		let configuration = ARWorldTrackingConfiguration()
+		configuration.planeDetection = .vertical
 
 		// Run the view's session
 		self.sceneView.session.run(configuration)
@@ -56,7 +66,6 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 		self.viewModel.$objectFrame
 			.receive(on: DispatchQueue.main)
 			.sink(receiveValue: { frame in
-				self.removeRectangleMask()
 				self.drawBoundingBox(boundingBox: frame)
 				self.currentBuffer = nil
 			})
@@ -68,64 +77,63 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 	func session(_ session: ARSession, didUpdate frame: ARFrame) {
 		// Do not enqueue other buffers for processing while another Vision task is still running.
 		// The camera stream has only a finite amount of buffers available; holding too many buffers for analysis would starve the camera.
-
-		guard currentBuffer == nil, case .normal = frame.camera.trackingState else {
-			return
+		guard
+			currentBuffer == nil,
+			case .normal = frame.camera.trackingState,
+			case .ready = self.sessionState else {
+				return
 		}
 
 		// Retain the image buffer for Vision processing.
 		self.currentBuffer = frame.capturedImage
-		guard let buff = self.sceneView.snapshot().transformImageToBuffer() else {
-			debugPrint("Nop")
-			return
-		}
-		self.viewModel.recognizeObject(image: buff)
+		self.viewModel.recognizeObject(image: frame.capturedImage)
 	}
 
 	private func drawBoundingBox(boundingBox: [CGRect]) {
-		for observation in self.viewModel.detectedObjects where observation.image != nil && observation.text != nil && addedAnchors.contains(observation) == false {
+		for observation in self.viewModel.accurateObjects {
 			guard let currentFrame = sceneView.session.currentFrame else {
 				debugPrint("skip current frame")
 				continue
 			}
 
-			// Get the affine transform to convert between normalized image coordinates and view coordinates
-			let fromCameraImageToViewTransform = currentFrame.displayTransform(for: .portrait, viewportSize: viewportSize)
-			// The observation's bounding box in normalized image coordinates
-			let boundingBox = observation.boundingBox
-			// Transform the latter into normalized view coordinates
-			let viewNormalizedBoundingBox = boundingBox.applying(fromCameraImageToViewTransform)
-			// The affine transform for view coordinates
-			let t = CGAffineTransform(scaleX: viewportSize.width, y: viewportSize.height)
-			// Scale up to view coordinates
-			let viewBoundingBox = viewNormalizedBoundingBox.applying(t)
+			guard self.addedAnchors.contains(observation) == false else {
+				debugPrint("siii")
+				continue
+			}
 
-			let midPoint = CGPoint(x: viewBoundingBox.midX, y: viewBoundingBox.midY)
+			let transform = CGAffineTransform(scaleX: 1, y: -1).translatedBy(x: 0, y: -sceneView.bounds.height)
+			let scale = CGAffineTransform.identity.scaledBy(x: sceneView.bounds.width, y: sceneView.bounds.height)
+			let bounds = observation.boundingBox.applying(scale).applying(transform)
+			let midPoint2 = CGPoint(x: bounds.midX, y: bounds.midY)
 
-			let query = sceneView.raycastQuery(from: midPoint, allowing: .estimatedPlane, alignment: .vertical)
-
-//			let results = sceneView.hitTest(midPoint, types: .featurePoint)
+//			// Get the affine transform to convert between normalized image coordinates and view coordinates
+//			let fromCameraImageToViewTransform = currentFrame.displayTransform(for: .portrait, viewportSize: self.viewportSize)
+//			// The observation's bounding box in normalized image coordinates
+//			let boundingBox = observation.boundingBox
+//			// Transform the latter into normalized view coordinates
+//			let viewNormalizedBoundingBox = boundingBox.applying(fromCameraImageToViewTransform)
+//			// The affine transform for view coordinates
+//			let t = CGAffineTransform(scaleX: viewportSize.width, y: self.viewportSize.height)
+//			// Scale up to view coordinates
+//			let viewBoundingBox = viewNormalizedBoundingBox.applying(t)
 //
-//			guard let result = results.first else {
-//				debugPrint("missed")
-//				continue
-//			}
+//			let midPoint = CGPoint(x: viewBoundingBox.midX, y: viewBoundingBox.midY)
+
+			let query = self.sceneView.raycastQuery(from: midPoint2, allowing: .estimatedPlane, alignment: .vertical)
+
 			guard
 				let resultQuery = query,
-				let result = sceneView.session.raycast(resultQuery).first else {
+				let result = self.sceneView.session.raycast(resultQuery).first else {
 					debugPrint("missed")
 					continue
 			}
 
-			debugPrint("not missed")
-			let anchor = ARAnchor(name: observation.text ?? "nop", transform: result.worldTransform)
-			if addedAnchors.contains(observation) == false {
-				sceneView.session.add(anchor: anchor)
-				self.addedAnchors.insert(observation)
-			}
-
-			// detectRemoteControl = false
+			let anchor = ARAnchor(name: observation.id.uuidString, transform: result.worldTransform)
+			self.sceneView.session.add(anchor: anchor)
+			self.addedAnchors.insert(observation)
 		}
+
+		self.viewModel.stop = self.viewModel.accurateObjects.count > 3
 	}
 
 	private func removeRectangleMask() {
@@ -137,18 +145,27 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 	}
 
 	func renderer(_ renderer: SCNSceneRenderer, nodeFor anchor: ARAnchor) -> SCNNode? {
-		let plane = SCNPlane(width: 0.010, height: 0.015)
+		guard
+			let observationId = anchor.name,
+			let currentObservation = self.viewModel.accurateObjects.first(where: { $0.id.uuidString == observationId })  else {
+				return nil
+		}
+
+		let plane = SCNPlane(width: (anchor.box.width / 5000), height: (anchor.box.height / 5000))
 		plane.firstMaterial?.diffuse.contents = UIColor.red
 
 		let planeNode = SCNNode(geometry: plane)
-		planeNode.eulerAngles.y = .pi
+		//rotate with respect to camera
+
+		planeNode.rotation = SCNVector4Make(-1, 0, 0, .pi / 2)
+		planeNode.pivotOnTopLeft()
 
 		let node = SCNNode()
 		node.addChildNode(planeNode)
 
 		let spacing: Float = 0.005
 
-		let bioNode = textNode(anchor.name ?? "test", font: UIFont.systemFont(ofSize: 4), maxWidth: 100)
+		let bioNode = textNode(currentObservation.text ?? "test", font: UIFont.systemFont(ofSize: 4), maxWidth: nil)
 		bioNode.pivotOnTopLeft()
 
 		bioNode.position.x += Float(plane.width / 2) + spacing
@@ -163,9 +180,10 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 
 		text.flatness = 0.1
 		text.font = font
+		text.firstMaterial?.diffuse.contents = UIColor.black
 
 		if let maxWidth = maxWidth {
-			text.containerFrame = CGRect(origin: .zero, size: CGSize(width: maxWidth, height: 500))
+			text.containerFrame = CGRect(origin: .zero, size: CGSize(width: maxWidth, height: 100))
 			text.isWrapped = true
 		}
 
@@ -173,5 +191,63 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 		textNode.scale = SCNVector3(0.002, 0.002, 0.002)
 
 		return textNode
+	}
+}
+
+/// - Tag: CoachingOverlayViewDelegate
+extension ARViewController: ARCoachingOverlayViewDelegate {
+
+	/// - Tag: HideUI
+	func coachingOverlayViewWillActivate(_ coachingOverlayView: ARCoachingOverlayView) {
+		self.sceneView.scene.rootNode.enumerateChildNodes { currentNode, _ in
+			currentNode.removeFromParentNode()
+		}
+
+		self.sessionState = .settingUp
+	}
+
+	/// - Tag: PresentUI
+	func coachingOverlayViewDidDeactivate(_ coachingOverlayView: ARCoachingOverlayView) {
+		self.viewModel.stop = false
+		self.currentBuffer = nil
+		self.sessionState = .ready
+		self.coachingOverlay.activatesAutomatically = false
+	}
+
+	/// - Tag: StartOver
+	func coachingOverlayViewDidRequestSessionReset(_ coachingOverlayView: ARCoachingOverlayView) {
+		// restartExperience()
+	}
+
+	func setupCoachingOverlay() {
+		// Set up coaching view
+		self.coachingOverlay.session = sceneView.session
+		self.coachingOverlay.delegate = self
+
+		self.coachingOverlay.translatesAutoresizingMaskIntoConstraints = false
+		self.sceneView.addSubview(self.coachingOverlay)
+
+		NSLayoutConstraint.activate([
+			self.coachingOverlay.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+			self.coachingOverlay.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+			self.coachingOverlay.widthAnchor.constraint(equalTo: view.widthAnchor),
+			self.coachingOverlay.heightAnchor.constraint(equalTo: view.heightAnchor)
+		])
+
+		self.setActivatesAutomatically()
+
+		// Most of the virtual objects in this sample require a horizontal surface,
+		// therefore coach the user to find a horizontal plane.
+		self.setGoal()
+	}
+
+	/// - Tag: CoachingActivatesAutomatically
+	func setActivatesAutomatically() {
+		self.coachingOverlay.activatesAutomatically = true
+	}
+
+	/// - Tag: CoachingGoal
+	func setGoal() {
+		coachingOverlay.goal = .verticalPlane
 	}
 }

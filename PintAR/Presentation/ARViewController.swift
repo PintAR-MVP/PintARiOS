@@ -47,6 +47,7 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 
 		// Create a session configuration
 		let configuration = ARWorldTrackingConfiguration()
+//        configuration.worldAlignment = .gravity
 
 		// Run the view's session
 		self.sceneView.session.run(configuration)
@@ -56,7 +57,7 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 		self.viewModel.$objectFrame
 			.receive(on: DispatchQueue.main)
 			.sink(receiveValue: { frame in
-				self.removeRectangleMask()
+				//self.removeRectangleMask()
 				self.drawBoundingBox(boundingBox: frame)
 				self.currentBuffer = nil
 			})
@@ -88,11 +89,14 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 				debugPrint("skip current frame")
 				continue
 			}
-
+          let transform = CGAffineTransform(scaleX: 1, y: -1).translatedBy(x: 0, y: -sceneView.bounds.height)
+          let scale = CGAffineTransform.identity.scaledBy(x: sceneView.bounds.width, y: sceneView.bounds.height)
 			// Get the affine transform to convert between normalized image coordinates and view coordinates
-			let fromCameraImageToViewTransform = currentFrame.displayTransform(for: .portrait, viewportSize: viewportSize)
+//			let fromCameraImageToViewTransform = currentFrame.displayTransform(for: .portrait, viewportSize: viewportSize)
 			// The observation's bounding box in normalized image coordinates
 			let boundingBox = observation.boundingBox
+
+            /*
 			// Transform the latter into normalized view coordinates
 			let viewNormalizedBoundingBox = boundingBox.applying(fromCameraImageToViewTransform)
 			// The affine transform for view coordinates
@@ -102,7 +106,27 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 
 			let midPoint = CGPoint(x: viewBoundingBox.midX, y: viewBoundingBox.midY)
 
-			let query = sceneView.raycastQuery(from: midPoint, allowing: .estimatedPlane, alignment: .vertical)
+//          Visiulize Center of bounding Boxes
+            
+            let boxLayer = CAShapeLayer()
+            let bounds = boundingBox.applying(scale).applying(transform)
+            boxLayer.frame = bounds
+            boxLayer.cornerRadius = 10
+            boxLayer.opacity = 1
+            boxLayer.borderColor = UIColor.systemBlue.cgColor
+            boxLayer.borderWidth = 6.0
+
+            self.rectangleMaskLayer.addSublayer(boxLayer)
+            
+            let midPoint2 = CGPoint(x: bounds.midX, y: bounds.midY)
+            let circleLayer = CAShapeLayer()
+            circleLayer.path = UIBezierPath(ovalIn: CGRect(x: midPoint2.x, y: midPoint2.y, width: 20, height: 20)).cgPath
+            circleLayer.fillColor = UIColor.red.cgColor
+            self.rectangleMaskLayer.addSublayer(circleLayer)
+*/
+            let bounds = boundingBox.applying(scale).applying(transform)
+            let midPoint2 = CGPoint(x: bounds.midX, y: bounds.midY)
+			let query = sceneView.raycastQuery(from: midPoint2, allowing: .estimatedPlane, alignment: .any)
 
 //			let results = sceneView.hitTest(midPoint, types: .featurePoint)
 //
@@ -118,7 +142,11 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 			}
 
 			debugPrint("not missed")
-			let anchor = ARAnchor(name: observation.text ?? "nop", transform: result.worldTransform)
+
+            let rotate = simd_float4x4(SCNMatrix4MakeRotation(currentFrame.camera.eulerAngles.y, 0, 1, 0))
+            let rotateAnchor = simd_mul(result.worldTransform, rotate)
+            let anchor = ARAnchor(name: observation.text ?? "nop", transform: rotateAnchor)
+            anchor.box = bounds
 			if addedAnchors.contains(observation) == false {
 				sceneView.session.add(anchor: anchor)
 				self.addedAnchors.insert(observation)
@@ -126,22 +154,31 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 
 			// detectRemoteControl = false
 		}
+        view.layer.insertSublayer(self.rectangleMaskLayer, at: 1)
 	}
 
 	private func removeRectangleMask() {
-		self.rectangleMaskLayer.sublayers?.removeAll()
-		self.rectangleMaskLayer.removeFromSuperlayer()
+        self.rectangleMaskLayer.sublayers?.removeAll()
+        self.rectangleMaskLayer.removeFromSuperlayer()
 	}
 
 	func renderer(_ renderer: SCNSceneRenderer, willRenderScene scene: SCNScene, atTime time: TimeInterval) {
 	}
 
-	func renderer(_ renderer: SCNSceneRenderer, nodeFor anchor: ARAnchor) -> SCNNode? {
-		let plane = SCNPlane(width: 0.010, height: 0.015)
-		plane.firstMaterial?.diffuse.contents = UIColor.red
+    enum CError: Error {
+        case CurrentFrameError
+    }
 
-		let planeNode = SCNNode(geometry: plane)
-		planeNode.eulerAngles.y = .pi
+	func renderer(_ renderer: SCNSceneRenderer, nodeFor anchor: ARAnchor) -> SCNNode? {
+        let plane = SCNPlane(width: (anchor.box.width / 5000), height: (anchor.box.height / 5000))
+//        let plane = SCNPlane(width: 0.015, height: 0.01)
+        plane.firstMaterial?.diffuse.contents = UIColor.red
+
+        let planeNode = SCNNode(geometry: plane)
+        //rotate with respect to camera
+
+        planeNode.rotation = SCNVector4Make(-1, 0, 0, .pi / 2)
+        planeNode.pivotOnTopCenter()
 
 		let node = SCNNode()
 		node.addChildNode(planeNode)
@@ -174,4 +211,26 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 
 		return textNode
 	}
+    @IBAction private func resetTrackingButton(_ sender: UIButton) {
+        resetTracking()
+    }
+    func resetTracking() {
+        addedAnchors = Set<DetectedObject>()
+        let configuration = ARWorldTrackingConfiguration()
+        sceneView.session.run(configuration, options: [.removeExistingAnchors, .resetTracking])
+    }
+}
+
+extension ARAnchor {
+    struct Holder {
+        static var _box:CGRect = CGRect()
+    }
+    var box:CGRect {
+        get {
+            return Holder._box
+        }
+        set(newValue) {
+            Holder._box = newValue
+        }
+    }
 }

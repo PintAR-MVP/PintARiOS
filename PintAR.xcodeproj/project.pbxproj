@@ -120,6 +120,14 @@
 			path = Resources;
 			sourceTree = "<group>";
 		};
+		0BA9175A27A705AC006BBF27 /* Data */ = {
+			isa = PBXGroup;
+			children = (
+				CC1A195C279031090045390E /* API */,
+			);
+			path = Data;
+			sourceTree = "<group>";
+		};
 		0BAA26822789DD9000E10D28 /* Entities */ = {
 			isa = PBXGroup;
 			children = (
@@ -158,16 +166,16 @@
 		CC16C71727465AAE007E1568 /* PintAR */ = {
 			isa = PBXGroup;
 			children = (
-				0B2AC9DD274EC6EA00C2EE98 /* Resources */,
-				0B02C8FD274D738D008F0506 /* Domain */,
+				0BA9175A27A705AC006BBF27 /* Data */,
 				CC16C71827465AAE007E1568 /* AppDelegate.swift */,
-				CC16C72E2746800C007E1568 /* Presentation */,
-				0B02C8F8274D7022008F0506 /* Extensions */,
 				CC16C72127465AB0007E1568 /* Assets.xcassets */,
-				CC16C72327465AB0007E1568 /* LaunchScreen.storyboard */,
+				0B02C8FD274D738D008F0506 /* Domain */,
+				0B02C8F8274D7022008F0506 /* Extensions */,
 				CC16C72627465AB0007E1568 /* Info.plist */,
+				CC16C72327465AB0007E1568 /* LaunchScreen.storyboard */,
 				0B40C4892746C4D500908879 /* main.storyboard */,
-				CC1A195C279031090045390E /* API */,
+				CC16C72E2746800C007E1568 /* Presentation */,
+				0B2AC9DD274EC6EA00C2EE98 /* Resources */,
 			);
 			path = PintAR;
 			sourceTree = "<group>";

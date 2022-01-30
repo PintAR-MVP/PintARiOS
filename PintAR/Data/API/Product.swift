@@ -8,11 +8,11 @@
 import Foundation
 
 struct Product: Codable {
-    let id: String
-    let name: String
-    let score: Double
+	let id: String
+	let name: String
+	let score: Double
 }
 
 struct Products: Codable {
-    var matches: [Product]
+	var matches: [Product]
 }

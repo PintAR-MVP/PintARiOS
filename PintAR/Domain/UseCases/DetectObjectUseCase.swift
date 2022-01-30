@@ -57,7 +57,6 @@ class DetectObjectUseCase: DetectObjectUseCaseProtocol {
 		}
 
 		self.requestCompletionHandler = VNImageRequestHandler(cvPixelBuffer: correctImage, orientation: .up, options: [:])
-
 		try? self.requestCompletionHandler?.perform(self.requests)
 	}
 

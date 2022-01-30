@@ -66,6 +66,7 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 		self.viewModel.$objectFrame
 			.receive(on: DispatchQueue.main)
 			.sink(receiveValue: { frame in
+				//self.removeRectangleMask()
 				self.drawBoundingBox(boundingBox: frame)
 				self.currentBuffer = nil
 			})
@@ -97,7 +98,6 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 			}
 
 			guard self.addedAnchors.contains(observation) == false else {
-				debugPrint("siii")
 				continue
 			}
 
@@ -129,19 +129,12 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 			}
 
 			let anchor = ARAnchor(name: observation.id.uuidString, transform: result.worldTransform)
+			anchor.box = bounds
 			self.sceneView.session.add(anchor: anchor)
 			self.addedAnchors.insert(observation)
 		}
 
 		self.viewModel.stop = self.viewModel.accurateObjects.count > 3
-	}
-
-	private func removeRectangleMask() {
-		self.rectangleMaskLayer.sublayers?.removeAll()
-		self.rectangleMaskLayer.removeFromSuperlayer()
-	}
-
-	func renderer(_ renderer: SCNSceneRenderer, willRenderScene scene: SCNScene, atTime time: TimeInterval) {
 	}
 
 	func renderer(_ renderer: SCNSceneRenderer, nodeFor anchor: ARAnchor) -> SCNNode? {
@@ -192,6 +185,33 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 
 		return textNode
 	}
+
+	@IBAction private func resetTrackingButton(_ sender: UIButton) {
+		self.resetTracking()
+	}
+
+	private func resetTracking() {
+		self.addedAnchors.removeAll()
+		let configuration = ARWorldTrackingConfiguration()
+		self.sceneView.session.run(configuration, options: [.removeExistingAnchors, .resetTracking])
+		self.viewModel.stop = false
+	}
+}
+
+extension ARAnchor {
+
+	struct Holder {
+		static var _box:CGRect = CGRect()
+	}
+
+	var box:CGRect {
+		get {
+			return Holder._box
+		}
+		set(newValue) {
+			Holder._box = newValue
+		}
+	}
 }
 
 /// - Tag: CoachingOverlayViewDelegate
@@ -211,7 +231,6 @@ extension ARViewController: ARCoachingOverlayViewDelegate {
 		self.viewModel.stop = false
 		self.currentBuffer = nil
 		self.sessionState = .ready
-		self.coachingOverlay.activatesAutomatically = false
 	}
 
 	/// - Tag: StartOver

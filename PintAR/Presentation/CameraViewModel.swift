@@ -112,9 +112,6 @@ class CameraViewModel {
 			}
 
 			result.text = self.textRecognition.recognizeText(in: detectedObjectImage)
-			if result.text == nil || result.text?.isEmpty == true {
-				self.rectangleObservations.removeValue(forKey: result)
-			}
 		}
 
 		self.accurateObjects = self.detectedObjects.filter { $0.image != nil && $0.text != nil }

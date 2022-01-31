@@ -17,7 +17,9 @@ protocol ExtractImageUseCaseProtocol {
 struct ExtractImageUseCase: ExtractImageUseCaseProtocol {
 
 	func imageExtraction(_ observation: VNRectangleObservation, from buffer: CVImageBuffer) -> UIImage? {
-		var ciImage = CIImage(cvImageBuffer: buffer)
+		// The image captured from the ARFrame is rotate 90 degrees to the left
+		// First we need to correct the image to extract the bounding box
+		var ciImage = CIImage(cvImageBuffer: buffer).oriented(.right)
 
 		let topLeft = observation.topLeft.scaled(to: ciImage.extent.size)
 		let topRight = observation.topRight.scaled(to: ciImage.extent.size)

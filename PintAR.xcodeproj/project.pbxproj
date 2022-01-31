@@ -10,9 +10,11 @@
 		0B02C8FA274D707D008F0506 /* CGPoint+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B02C8F9274D707D008F0506 /* CGPoint+Extension.swift */; };
 		0B02C8FC274D71DE008F0506 /* CameraViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B02C8FB274D71DE008F0506 /* CameraViewModel.swift */; };
 		0B02C900274D74CB008F0506 /* DetectObjectUseCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B02C8FF274D74CB008F0506 /* DetectObjectUseCase.swift */; };
-		0B02C904274D7AB2008F0506 /* Result+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B02C903274D7AB2008F0506 /* Result+Extension.swift */; };
+		0B17363B27A322F6009D54FE /* UIImage+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B17363A27A322F6009D54FE /* UIImage+Extension.swift */; };
+		0B17363D27A32405009D54FE /* SCNode+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B17363C27A32405009D54FE /* SCNode+Extension.swift */; };
 		0B2AC9E3274ECB9A00C2EE98 /* YOLOv3Tiny.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = 0B2AC9E2274ECB9A00C2EE98 /* YOLOv3Tiny.mlmodel */; };
 		0B40C48A2746C4D500908879 /* main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0B40C4892746C4D500908879 /* main.storyboard */; };
+		0B4507F927944795008D4AB3 /* ARViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B4507F827944795008D4AB3 /* ARViewController.swift */; };
 		0BAA26812789D23100E10D28 /* ExtractImageUseCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BAA26802789D23100E10D28 /* ExtractImageUseCase.swift */; };
 		0BAA26842789DDAD00E10D28 /* DetectedObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BAA26832789DDAD00E10D28 /* DetectedObject.swift */; };
 		91EEE061F85B0C07D8EDB313 /* Pods_PintAR.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 33DF1B1870E6ABAFE139D29F /* Pods_PintAR.framework */; };
@@ -36,9 +38,11 @@
 		0B02C8F9274D707D008F0506 /* CGPoint+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CGPoint+Extension.swift"; sourceTree = "<group>"; };
 		0B02C8FB274D71DE008F0506 /* CameraViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraViewModel.swift; sourceTree = "<group>"; };
 		0B02C8FF274D74CB008F0506 /* DetectObjectUseCase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetectObjectUseCase.swift; sourceTree = "<group>"; };
-		0B02C903274D7AB2008F0506 /* Result+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Result+Extension.swift"; sourceTree = "<group>"; };
+		0B17363A27A322F6009D54FE /* UIImage+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIImage+Extension.swift"; sourceTree = "<group>"; };
+		0B17363C27A32405009D54FE /* SCNode+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SCNode+Extension.swift"; sourceTree = "<group>"; };
 		0B2AC9E2274ECB9A00C2EE98 /* YOLOv3Tiny.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = YOLOv3Tiny.mlmodel; sourceTree = "<group>"; };
 		0B40C4892746C4D500908879 /* main.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = main.storyboard; sourceTree = "<group>"; };
+		0B4507F827944795008D4AB3 /* ARViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ARViewController.swift; sourceTree = "<group>"; };
 		0BAA26802789D23100E10D28 /* ExtractImageUseCase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtractImageUseCase.swift; sourceTree = "<group>"; };
 		0BAA26832789DDAD00E10D28 /* DetectedObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetectedObject.swift; sourceTree = "<group>"; };
 		165B6C22C262B2B1B7422BDC /* Pods-PintAR.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-PintAR.debug.xcconfig"; path = "Target Support Files/Pods-PintAR/Pods-PintAR.debug.xcconfig"; sourceTree = "<group>"; };
@@ -78,7 +82,8 @@
 			isa = PBXGroup;
 			children = (
 				0B02C8F9274D707D008F0506 /* CGPoint+Extension.swift */,
-				0B02C903274D7AB2008F0506 /* Result+Extension.swift */,
+				0B17363A27A322F6009D54FE /* UIImage+Extension.swift */,
+				0B17363C27A32405009D54FE /* SCNode+Extension.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -113,6 +118,14 @@
 				0B2AC9E2274ECB9A00C2EE98 /* YOLOv3Tiny.mlmodel */,
 			);
 			path = Resources;
+			sourceTree = "<group>";
+		};
+		0BA9175A27A705AC006BBF27 /* Data */ = {
+			isa = PBXGroup;
+			children = (
+				CC1A195C279031090045390E /* API */,
+			);
+			path = Data;
 			sourceTree = "<group>";
 		};
 		0BAA26822789DD9000E10D28 /* Entities */ = {
@@ -153,16 +166,16 @@
 		CC16C71727465AAE007E1568 /* PintAR */ = {
 			isa = PBXGroup;
 			children = (
-				0B2AC9DD274EC6EA00C2EE98 /* Resources */,
-				0B02C8FD274D738D008F0506 /* Domain */,
+				0BA9175A27A705AC006BBF27 /* Data */,
 				CC16C71827465AAE007E1568 /* AppDelegate.swift */,
-				CC16C72E2746800C007E1568 /* Presentation */,
-				0B02C8F8274D7022008F0506 /* Extensions */,
 				CC16C72127465AB0007E1568 /* Assets.xcassets */,
-				CC16C72327465AB0007E1568 /* LaunchScreen.storyboard */,
+				0B02C8FD274D738D008F0506 /* Domain */,
+				0B02C8F8274D7022008F0506 /* Extensions */,
 				CC16C72627465AB0007E1568 /* Info.plist */,
+				CC16C72327465AB0007E1568 /* LaunchScreen.storyboard */,
 				0B40C4892746C4D500908879 /* main.storyboard */,
-				CC1A195C279031090045390E /* API */,
+				CC16C72E2746800C007E1568 /* Presentation */,
+				0B2AC9DD274EC6EA00C2EE98 /* Resources */,
 			);
 			path = PintAR;
 			sourceTree = "<group>";
@@ -173,6 +186,7 @@
 				CC16C72C27465C8E007E1568 /* CameraViewController.swift */,
 				0B02C8FB274D71DE008F0506 /* CameraViewModel.swift */,
 				CC16C71C27465AAE007E1568 /* ImageDetailViewController.swift */,
+				0B4507F827944795008D4AB3 /* ARViewController.swift */,
 			);
 			path = Presentation;
 			sourceTree = "<group>";
@@ -323,10 +337,12 @@
 				CCD96D422753A3C400786079 /* DetectionTask.swift in Sources */,
 				CC1A195E279040C40045390E /* SearchQuery.swift in Sources */,
 				0BAA26842789DDAD00E10D28 /* DetectedObject.swift in Sources */,
+				0B17363D27A32405009D54FE /* SCNode+Extension.swift in Sources */,
 				0B02C8FC274D71DE008F0506 /* CameraViewModel.swift in Sources */,
 				CC16AD972785CDB80016C47F /* ColorDetection.swift in Sources */,
-				0B02C904274D7AB2008F0506 /* Result+Extension.swift in Sources */,
 				CCD96D442753A9EE00786079 /* RectangleDetection.swift in Sources */,
+				0B17363B27A322F6009D54FE /* UIImage+Extension.swift in Sources */,
+				0B4507F927944795008D4AB3 /* ARViewController.swift in Sources */,
 				CCD96D462753A9F500786079 /* TextRecognition.swift in Sources */,
 				0B02C900274D74CB008F0506 /* DetectObjectUseCase.swift in Sources */,
 				CC1A195B279031030045390E /* API.swift in Sources */,
@@ -473,7 +489,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = XYJ2TQ4992;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = PintAR/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "This application requires camera access for scanning products.";
@@ -488,7 +504,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = pintAR.PintAR;
+				PRODUCT_BUNDLE_IDENTIFIER = pintAR.PintAR.dk;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -521,7 +537,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = pintAR.PintAR;
+				PRODUCT_BUNDLE_IDENTIFIER = pintAR.PintAR.dk;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;

@@ -23,7 +23,9 @@ class CameraViewModel {
 
 	/// Represents the image captured by the camera where the object will be recognised
 	private var recognisedObjectContainerImage: CVImageBuffer?
-	private var detectedObjects = [DetectedObject]()
+	private(set) var detectedObjects = [DetectedObject]()
+	private(set) var accurateObjects = [DetectedObject]()
+	var stop: Bool = false
 
 	init(detectObjectUseCase: DetectObjectUseCaseProtocol) {
 		self.detectObjectUseCase = detectObjectUseCase
@@ -46,6 +48,11 @@ class CameraViewModel {
 			case .rectangles(model: _):
 				RectangleDetection.convert(value: value)?
 					.sink(receiveValue: { (detectedObjects) in
+						guard self.stop == false else {
+							self.performDetectionsOnRecognisedBoundingBoxes()
+							return
+						}
+
 						self.detectedObjects = detectedObjects
 						self.performDetectionsOnRecognisedBoundingBoxes()
 					})
@@ -66,6 +73,8 @@ class CameraViewModel {
 			let currentImage = self.recognisedObjectContainerImage,
 			self.detectedObjects.isEmpty == false else {
 				self.objectFrame = []
+				self.accurateObjects.removeAll()
+				self.stop = false
 				return
 		}
 
@@ -75,7 +84,7 @@ class CameraViewModel {
 			rectangleObservations[object] = rectangle
 		}
 
-		for rectangleObservation in rectangleObservations {
+		for rectangleObservation in rectangleObservations where stop == false {
 			guard let extractedImage = self.extractImageUseCase.imageExtraction(rectangleObservation.value, from: currentImage) else {
 				// remove the detected objects where we cant extract the image
 				if let index = self.detectedObjects.firstIndex(of: rectangleObservation.key) {
@@ -105,9 +114,15 @@ class CameraViewModel {
 			result.text = self.textRecognition.recognizeText(in: detectedObjectImage)
 		}
 
-		let accurate = self.detectedObjects.filter({ $0.image != nil && $0.text != nil })
+		self.accurateObjects = self.detectedObjects.filter { $0.image != nil && $0.text != nil }
 
-		self.objectFrame = accurate.map({ $0.boundingBox })
-		print(accurate.count)
+		if self.accurateObjects.isEmpty {
+			self.detectedObjects.removeAll()
+			self.accurateObjects.removeAll()
+			self.stop = false
+		}
+
+		self.objectFrame = self.accurateObjects.map { $0.boundingBox }
+		print(accurateObjects.count)
 	}
 }

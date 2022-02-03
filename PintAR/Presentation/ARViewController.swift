@@ -22,7 +22,7 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 	private var viewportSize: CGSize = .zero
 	private var cameraLiveViewLayer: SKScene?
 	private var rectangleMaskLayer = CAShapeLayer()
-	private var addedAnchors = Set<DetectedObject>()
+    private var addedAnchors = Set<ARRaycastResult>()
 	private var sessionState: SessionState = .settingUp
 
 	// The pixel buffer being held for analysis; used to serialize Vision requests.
@@ -97,9 +97,9 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 				continue
 			}
 
-			guard self.addedAnchors.contains(observation) == false else {
-				continue
-			}
+//			guard self.addedAnchors.contains(observation) == false else {
+//				continue
+//			}
 
 			let transform = CGAffineTransform(scaleX: 1, y: -1).translatedBy(x: 0, y: -sceneView.bounds.height)
 			let scale = CGAffineTransform.identity.scaledBy(x: sceneView.bounds.width, y: sceneView.bounds.height)
@@ -129,13 +129,34 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 			}
 
 			let anchor = ARAnchor(name: observation.id.uuidString, transform: result.worldTransform)
-			anchor.box = bounds
-			self.sceneView.session.add(anchor: anchor)
-			self.addedAnchors.insert(observation)
+            let minDistance:Float = 0.05;  //TODO: find the best fitting value for the minimum distance
+            if minDistanceAnchor(newResult: result) > minDistance {
+                anchor.box = bounds
+                self.sceneView.session.add(anchor: anchor)
+                self.addedAnchors.insert(result)
+            } else {
+                debugPrint("Drop anchor because its to close to another anchor")
+            }
 		}
 
 		self.viewModel.stop = self.viewModel.accurateObjects.count > 3
 	}
+    
+    func minDistanceAnchor(newResult: ARRaycastResult) -> Float {
+        var minDistance:Float = 1
+        for oldResult in self.addedAnchors {
+            let newAnchor = newResult.worldTransform
+            let oldAnchor = oldResult.worldTransform
+            let startPoint = SCNVector3(newAnchor.columns.3.x, newAnchor.columns.3.y, newAnchor.columns.3.z)
+            let endPoint = SCNVector3(oldAnchor.columns.3.x, oldAnchor.columns.3.y, oldAnchor.columns.3.z)
+            let newDistance = startPoint.distance(vector: endPoint)
+            if newDistance < minDistance {
+                minDistance = newDistance
+            }
+        }
+        debugPrint("minDistance :", minDistance)
+        return minDistance
+    }
 
 	func renderer(_ renderer: SCNSceneRenderer, nodeFor anchor: ARAnchor) -> SCNNode? {
 		guard
@@ -144,8 +165,15 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 				return nil
 		}
 
-		let plane = SCNPlane(width: (anchor.box.width / 5000), height: (anchor.box.height / 5000))
-		plane.firstMaterial?.diffuse.contents = UIColor.red
+		let plane = SCNPlane(width: (anchor.box.width / 3000), height: (anchor.box.height / 3000))
+//        let plane = SCNPlane(width: 0.01, height: 0.01)
+
+        let material = SCNMaterial()
+        material.isDoubleSided = true
+        material.diffuse.contents = UIImage(named: "Bbox.png")
+        material.transparencyMode = .aOne
+
+        plane.materials = [material]
 
 		let planeNode = SCNNode(geometry: plane)
 		//rotate with respect to camera

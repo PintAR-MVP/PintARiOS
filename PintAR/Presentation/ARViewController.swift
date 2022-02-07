@@ -24,6 +24,8 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 	private var rectangleMaskLayer = CAShapeLayer()
     private var addedAnchors = Set<ARRaycastResult>()
 	private var sessionState: SessionState = .settingUp
+    private var distanceToPlane = Float()
+    private var anchorCount = Int()
 
 	// The pixel buffer being held for analysis; used to serialize Vision requests.
 	private var currentBuffer: CVPixelBuffer?
@@ -47,7 +49,6 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 
 	override func viewDidLayoutSubviews() {
 		super.viewDidLayoutSubviews()
-
 		viewportSize = sceneView.frame.size
 	}
 
@@ -56,7 +57,8 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 
 		// Create a session configuration
 		let configuration = ARWorldTrackingConfiguration()
-		configuration.planeDetection = .vertical
+		configuration.planeDetection = .horizontal
+        sceneView.debugOptions = [ARSCNDebugOptions.showFeaturePoints, ARSCNDebugOptions.showWorldOrigin]
 
 		// Run the view's session
 		self.sceneView.session.run(configuration)
@@ -66,7 +68,7 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 		self.viewModel.$objectFrame
 			.receive(on: DispatchQueue.main)
 			.sink(receiveValue: { frame in
-				//self.removeRectangleMask()
+				self.removeRectangleMask()
 				self.drawBoundingBox(boundingBox: frame)
 				self.currentBuffer = nil
 			})
@@ -97,29 +99,25 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 				continue
 			}
 
-//			guard self.addedAnchors.contains(observation) == false else {
-//				continue
-//			}
-
 			let transform = CGAffineTransform(scaleX: 1, y: -1).translatedBy(x: 0, y: -sceneView.bounds.height)
 			let scale = CGAffineTransform.identity.scaledBy(x: sceneView.bounds.width, y: sceneView.bounds.height)
 			let bounds = observation.boundingBox.applying(scale).applying(transform)
-			let midPoint2 = CGPoint(x: bounds.midX, y: bounds.midY)
+			let midPoint = CGPoint(x: bounds.midX, y: bounds.midY)
 
-//			// Get the affine transform to convert between normalized image coordinates and view coordinates
-//			let fromCameraImageToViewTransform = currentFrame.displayTransform(for: .portrait, viewportSize: self.viewportSize)
-//			// The observation's bounding box in normalized image coordinates
-//			let boundingBox = observation.boundingBox
-//			// Transform the latter into normalized view coordinates
-//			let viewNormalizedBoundingBox = boundingBox.applying(fromCameraImageToViewTransform)
-//			// The affine transform for view coordinates
-//			let t = CGAffineTransform(scaleX: viewportSize.width, y: self.viewportSize.height)
-//			// Scale up to view coordinates
-//			let viewBoundingBox = viewNormalizedBoundingBox.applying(t)
-//
-//			let midPoint = CGPoint(x: viewBoundingBox.midX, y: viewBoundingBox.midY)
+            for box in boundingBox {
+                let boxLayer = CAShapeLayer()
+                let bounds = box.applying(scale).applying(transform)
+                boxLayer.frame = bounds
+                boxLayer.cornerRadius = 10
+                boxLayer.opacity = 1
+                boxLayer.borderColor = UIColor.systemBlue.cgColor
+                boxLayer.borderWidth = 6.0
 
-			let query = self.sceneView.raycastQuery(from: midPoint2, allowing: .estimatedPlane, alignment: .vertical)
+                self.rectangleMaskLayer.addSublayer(boxLayer)
+            }
+
+            self.sceneView.layer.addSublayer(self.rectangleMaskLayer)
+			let query = self.sceneView.raycastQuery(from: midPoint, allowing: .estimatedPlane, alignment: .vertical)
 
 			guard
 				let resultQuery = query,
@@ -128,34 +126,65 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 					continue
 			}
 
-			let anchor = ARAnchor(name: observation.id.uuidString, transform: result.worldTransform)
-            let minDistance:Float = 0.05;  //TODO: find the best fitting value for the minimum distance
-            if minDistanceAnchor(newResult: result) > minDistance {
+			var anchor = ARAnchor(name: observation.id.uuidString, transform: result.worldTransform)
+            anchor = zNormalization(anchor: anchor)
+
+            if isNewAnchor(newResult: result) == true {
                 anchor.box = bounds
                 self.sceneView.session.add(anchor: anchor)
                 self.addedAnchors.insert(result)
             } else {
-                debugPrint("Drop anchor because its to close to another anchor")
+                debugPrint("Drop anchor because it is to close to another anchor")
             }
 		}
-
 		self.viewModel.stop = self.viewModel.accurateObjects.count > 3
 	}
-    
-    func minDistanceAnchor(newResult: ARRaycastResult) -> Float {
+
+    func zNormalization(anchor: ARAnchor) -> ARAnchor {
+        if self.anchorCount > 0 {
+            let zPos = anchor.transform.columns.3.z
+            self.distanceToPlane = (self.distanceToPlane * Float(self.anchorCount - 1) + zPos) / Float(self.anchorCount)
+            self.anchorCount += 1
+            var translation = matrix_identity_float4x4
+            translation.columns.3.z = self.distanceToPlane
+            let transform = simd_mul(anchor.transform, translation)
+            return ARAnchor(transform: transform)
+        }
+        return anchor
+    }
+
+    func isNewAnchor(newResult: ARRaycastResult) -> Bool {
+        let minDistanceX: Float = 0.05
+        let minDistanceY: Float = 0.1
+        let minDistanceZ: Float = 0.3
         var minDistance:Float = 1
+        var nearestNeighbor = simd_float4x4()
+        let newAnchor = newResult.worldTransform
+        
         for oldResult in self.addedAnchors {
-            let newAnchor = newResult.worldTransform
             let oldAnchor = oldResult.worldTransform
-            let startPoint = SCNVector3(newAnchor.columns.3.x, newAnchor.columns.3.y, newAnchor.columns.3.z)
-            let endPoint = SCNVector3(oldAnchor.columns.3.x, oldAnchor.columns.3.y, oldAnchor.columns.3.z)
+            //not taken into account z direction (towards camera) because that is shifted sometimes.
+            let startPoint = SCNVector3(newAnchor.columns.3.x, newAnchor.columns.3.y, 0)
+            let endPoint = SCNVector3(oldAnchor.columns.3.x, oldAnchor.columns.3.y, 0)
             let newDistance = startPoint.distance(vector: endPoint)
             if newDistance < minDistance {
                 minDistance = newDistance
+                nearestNeighbor = oldAnchor
             }
         }
-        debugPrint("minDistance :", minDistance)
-        return minDistance
+
+        let xDist = abs(newAnchor.columns.3.x - nearestNeighbor.columns.3.x)
+        let yDist = abs(newAnchor.columns.3.y - nearestNeighbor.columns.3.y)
+        let zDist = abs(newAnchor.columns.3.z)
+
+        debugPrint("xDist: ", xDist)
+        debugPrint("yDist: ", yDist)
+        debugPrint("zDist: ", zDist)
+        if ((xDist < minDistanceX) && (yDist < minDistanceY)) || (zDist < minDistanceZ) {
+            return false
+        } else {
+            return true
+        }
     }
 
 	func renderer(_ renderer: SCNSceneRenderer, nodeFor anchor: ARAnchor) -> SCNNode? {
@@ -165,35 +194,33 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 				return nil
 		}
 
-		let plane = SCNPlane(width: (anchor.box.width / 3000), height: (anchor.box.height / 3000))
-//        let plane = SCNPlane(width: 0.01, height: 0.01)
+//		let plane = SCNPlane(width: (anchor.box.width / 500), height: (anchor.box.height / 500))
+        let plane = SCNPlane(width: 0.6, height: 0.1)
 
         let material = SCNMaterial()
         material.isDoubleSided = true
-        material.diffuse.contents = UIImage(named: "Bbox.png")
+        material.diffuse.contents = UIImage(named: "vis.png")
         material.transparencyMode = .aOne
 
         plane.materials = [material]
 
 		let planeNode = SCNNode(geometry: plane)
+
 		//rotate with respect to camera
-
 		planeNode.rotation = SCNVector4Make(-1, 0, 0, .pi / 2)
-		planeNode.pivotOnTopLeft()
+//		planeNode.pivotOnTopLeft()
 
-		let node = SCNNode()
-		node.addChildNode(planeNode)
+        let node = SCNNode()
+        node.addChildNode(planeNode)
 
-		let spacing: Float = 0.005
+        let bioNode = textNode(currentObservation.text ?? "test", font: UIFont.systemFont(ofSize: 10), maxWidth: nil)
+        bioNode.pivotOnTopLeft()
 
-		let bioNode = textNode(currentObservation.text ?? "test", font: UIFont.systemFont(ofSize: 4), maxWidth: nil)
-		bioNode.pivotOnTopLeft()
+        bioNode.position.x += 0.05
+        bioNode.position.y += 0.06
 
-		bioNode.position.x += Float(plane.width / 2) + spacing
-		bioNode.position.y += Float(plane.height / 2)
-
-		planeNode.addChildNode(bioNode)
-		return node
+        planeNode.addChildNode(bioNode)
+        return node
 	}
 
 	func textNode(_ str: String, font: UIFont, maxWidth: Int? = nil) -> SCNNode {
@@ -201,7 +228,7 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 
 		text.flatness = 0.1
 		text.font = font
-		text.firstMaterial?.diffuse.contents = UIColor.black
+		text.firstMaterial?.diffuse.contents = UIColor.red
 
 		if let maxWidth = maxWidth {
 			text.containerFrame = CGRect(origin: .zero, size: CGSize(width: maxWidth, height: 100))
@@ -221,9 +248,18 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 	private func resetTracking() {
 		self.addedAnchors.removeAll()
 		let configuration = ARWorldTrackingConfiguration()
+        configuration.planeDetection = .horizontal
+        sceneView.debugOptions = [ARSCNDebugOptions.showFeaturePoints, ARSCNDebugOptions.showWorldOrigin]
 		self.sceneView.session.run(configuration, options: [.removeExistingAnchors, .resetTracking])
 		self.viewModel.stop = false
+        self.setupCoachingOverlay()
+        self.anchorCount = 0
 	}
+
+    private func removeRectangleMask() {
+        self.rectangleMaskLayer.sublayers?.removeAll()
+        self.rectangleMaskLayer.removeFromSuperlayer()
+    }
 }
 
 extension ARAnchor {
@@ -259,6 +295,11 @@ extension ARViewController: ARCoachingOverlayViewDelegate {
 		self.viewModel.stop = false
 		self.currentBuffer = nil
 		self.sessionState = .ready
+        debugPrint("detected a Plane")
+        self.sceneView.scene.rootNode.enumerateChildNodes { currentNode, _ in
+            self.distanceToPlane = currentNode.simdPosition.z
+            debugPrint("Distance to plane: ", self.distanceToPlane)
+        }
 	}
 
 	/// - Tag: StartOver

@@ -31,8 +31,8 @@
 		CCD96D422753A3C400786079 /* DetectionTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCD96D412753A3C400786079 /* DetectionTask.swift */; };
 		CCD96D442753A9EE00786079 /* RectangleDetection.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCD96D432753A9EE00786079 /* RectangleDetection.swift */; };
 		CCD96D462753A9F500786079 /* TextRecognition.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCD96D452753A9F500786079 /* TextRecognition.swift */; };
-		F633966227AC30CD006D9FA1 /* Bbox.png in Resources */ = {isa = PBXBuildFile; fileRef = F633966127AC30CD006D9FA1 /* Bbox.png */; };
 		F633966427AC3C20006D9FA1 /* SCNVector3+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = F633966327AC3C20006D9FA1 /* SCNVector3+Extension.swift */; };
+		F633966E27B06214006D9FA1 /* vis.png in Resources */ = {isa = PBXBuildFile; fileRef = F633966D27B06214006D9FA1 /* vis.png */; };
 		F6FFD2982769F1880076A3FF /* YOLOv5-train.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = F6FFD2972769F1880076A3FF /* YOLOv5-train.mlmodel */; };
 /* End PBXBuildFile section */
 
@@ -65,9 +65,8 @@
 		CCD96D412753A3C400786079 /* DetectionTask.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DetectionTask.swift; sourceTree = "<group>"; };
 		CCD96D432753A9EE00786079 /* RectangleDetection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RectangleDetection.swift; sourceTree = "<group>"; };
 		CCD96D452753A9F500786079 /* TextRecognition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextRecognition.swift; sourceTree = "<group>"; };
-		F633966027AC2D15006D9FA1 /* BBox.reality */ = {isa = PBXFileReference; lastKnownFileType = file; path = BBox.reality; sourceTree = "<group>"; };
-		F633966127AC30CD006D9FA1 /* Bbox.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Bbox.png; sourceTree = "<group>"; };
 		F633966327AC3C20006D9FA1 /* SCNVector3+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SCNVector3+Extension.swift"; sourceTree = "<group>"; };
+		F633966D27B06214006D9FA1 /* vis.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = vis.png; path = ../../../../../../../../Desktop/vis.png; sourceTree = "<group>"; };
 		F6FFD2972769F1880076A3FF /* YOLOv5-train.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = "YOLOv5-train.mlmodel"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -189,8 +188,7 @@
 		CC16C72E2746800C007E1568 /* Presentation */ = {
 			isa = PBXGroup;
 			children = (
-				F633966027AC2D15006D9FA1 /* BBox.reality */,
-				F633966127AC30CD006D9FA1 /* Bbox.png */,
+				F633966D27B06214006D9FA1 /* vis.png */,
 				CC16C72C27465C8E007E1568 /* CameraViewController.swift */,
 				0B02C8FB274D71DE008F0506 /* CameraViewModel.swift */,
 				CC16C71C27465AAE007E1568 /* ImageDetailViewController.swift */,
@@ -279,7 +277,7 @@
 			files = (
 				CC16C72527465AB0007E1568 /* LaunchScreen.storyboard in Resources */,
 				0B40C48A2746C4D500908879 /* main.storyboard in Resources */,
-				F633966227AC30CD006D9FA1 /* Bbox.png in Resources */,
+				F633966E27B06214006D9FA1 /* vis.png in Resources */,
 				CC16C72227465AB0007E1568 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

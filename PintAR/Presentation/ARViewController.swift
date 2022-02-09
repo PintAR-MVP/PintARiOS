@@ -96,7 +96,7 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 
 	private func configureAnchors(detectedObjects: [DetectedObject]) {
 		for observation in detectedObjects {
-			guard let _ = self.sceneView.session.currentFrame else {
+			guard self.sceneView.session.currentFrame != nil else {
 				debugPrint("skip current frame")
 				continue
 			}

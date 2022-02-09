@@ -17,6 +17,7 @@
 		0B4507F927944795008D4AB3 /* ARViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B4507F827944795008D4AB3 /* ARViewController.swift */; };
 		0BAA26812789D23100E10D28 /* ExtractImageUseCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BAA26802789D23100E10D28 /* ExtractImageUseCase.swift */; };
 		0BAA26842789DDAD00E10D28 /* DetectedObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BAA26832789DDAD00E10D28 /* DetectedObject.swift */; };
+		0BDAB63127B25CD2003A6EFE /* vis.png in Resources */ = {isa = PBXBuildFile; fileRef = 0BDAB63027B25CD2003A6EFE /* vis.png */; };
 		91EEE061F85B0C07D8EDB313 /* Pods_PintAR.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 33DF1B1870E6ABAFE139D29F /* Pods_PintAR.framework */; };
 		CC16AD972785CDB80016C47F /* ColorDetection.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC16AD962785CDB80016C47F /* ColorDetection.swift */; };
 		CC16C71927465AAE007E1568 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC16C71827465AAE007E1568 /* AppDelegate.swift */; };
@@ -32,7 +33,6 @@
 		CCD96D442753A9EE00786079 /* RectangleDetection.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCD96D432753A9EE00786079 /* RectangleDetection.swift */; };
 		CCD96D462753A9F500786079 /* TextRecognition.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCD96D452753A9F500786079 /* TextRecognition.swift */; };
 		F633966427AC3C20006D9FA1 /* SCNVector3+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = F633966327AC3C20006D9FA1 /* SCNVector3+Extension.swift */; };
-		F633966E27B06214006D9FA1 /* vis.png in Resources */ = {isa = PBXBuildFile; fileRef = F633966D27B06214006D9FA1 /* vis.png */; };
 		F6FFD2982769F1880076A3FF /* YOLOv5-train.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = F6FFD2972769F1880076A3FF /* YOLOv5-train.mlmodel */; };
 /* End PBXBuildFile section */
 
@@ -47,6 +47,7 @@
 		0B4507F827944795008D4AB3 /* ARViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ARViewController.swift; sourceTree = "<group>"; };
 		0BAA26802789D23100E10D28 /* ExtractImageUseCase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtractImageUseCase.swift; sourceTree = "<group>"; };
 		0BAA26832789DDAD00E10D28 /* DetectedObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetectedObject.swift; sourceTree = "<group>"; };
+		0BDAB63027B25CD2003A6EFE /* vis.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = vis.png; sourceTree = "<group>"; };
 		165B6C22C262B2B1B7422BDC /* Pods-PintAR.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-PintAR.debug.xcconfig"; path = "Target Support Files/Pods-PintAR/Pods-PintAR.debug.xcconfig"; sourceTree = "<group>"; };
 		33DF1B1870E6ABAFE139D29F /* Pods_PintAR.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_PintAR.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		60E5E2B9B392A09CF780013B /* Pods-PintAR.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-PintAR.release.xcconfig"; path = "Target Support Files/Pods-PintAR/Pods-PintAR.release.xcconfig"; sourceTree = "<group>"; };
@@ -66,7 +67,6 @@
 		CCD96D432753A9EE00786079 /* RectangleDetection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RectangleDetection.swift; sourceTree = "<group>"; };
 		CCD96D452753A9F500786079 /* TextRecognition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextRecognition.swift; sourceTree = "<group>"; };
 		F633966327AC3C20006D9FA1 /* SCNVector3+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SCNVector3+Extension.swift"; sourceTree = "<group>"; };
-		F633966D27B06214006D9FA1 /* vis.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = vis.png; path = ../../../../../../../../Desktop/vis.png; sourceTree = "<group>"; };
 		F6FFD2972769F1880076A3FF /* YOLOv5-train.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = "YOLOv5-train.mlmodel"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -188,7 +188,7 @@
 		CC16C72E2746800C007E1568 /* Presentation */ = {
 			isa = PBXGroup;
 			children = (
-				F633966D27B06214006D9FA1 /* vis.png */,
+				0BDAB63027B25CD2003A6EFE /* vis.png */,
 				CC16C72C27465C8E007E1568 /* CameraViewController.swift */,
 				0B02C8FB274D71DE008F0506 /* CameraViewModel.swift */,
 				CC16C71C27465AAE007E1568 /* ImageDetailViewController.swift */,
@@ -277,8 +277,8 @@
 			files = (
 				CC16C72527465AB0007E1568 /* LaunchScreen.storyboard in Resources */,
 				0B40C48A2746C4D500908879 /* main.storyboard in Resources */,
-				F633966E27B06214006D9FA1 /* vis.png in Resources */,
 				CC16C72227465AB0007E1568 /* Assets.xcassets in Resources */,
+				0BDAB63127B25CD2003A6EFE /* vis.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

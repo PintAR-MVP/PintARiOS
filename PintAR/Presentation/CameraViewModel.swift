@@ -11,7 +11,7 @@ import Combine
 
 class CameraViewModel {
 
-	@Published var objectFrame: [CGRect] = [.zero]
+	@Published var accurateObjects = [DetectedObject]()
 
 	private let recognizeObjectQueue = DispatchQueue(label: "RecognizeObject", qos: .userInitiated)
 	private var cancellableSet: Set<AnyCancellable> = []
@@ -24,7 +24,6 @@ class CameraViewModel {
 	/// Represents the image captured by the camera where the object will be recognised
 	private var recognisedObjectContainerImage: CVImageBuffer?
 	private(set) var detectedObjects = [DetectedObject]()
-	private(set) var accurateObjects = [DetectedObject]()
 	var stop: Bool = false
 
 	init(detectObjectUseCase: DetectObjectUseCaseProtocol) {
@@ -49,7 +48,7 @@ class CameraViewModel {
 				RectangleDetection.convert(value: value)?
 					.sink(receiveValue: { (detectedObjects) in
 						guard self.stop == false else {
-							self.performDetectionsOnRecognisedBoundingBoxes()
+							// self.performDetectionsOnRecognisedBoundingBoxes()
 							return
 						}
 
@@ -72,7 +71,6 @@ class CameraViewModel {
 		guard
 			let currentImage = self.recognisedObjectContainerImage,
 			self.detectedObjects.isEmpty == false else {
-				self.objectFrame = []
 				self.accurateObjects.removeAll()
 				self.stop = false
 				return
@@ -84,7 +82,7 @@ class CameraViewModel {
 			rectangleObservations[object] = rectangle
 		}
 
-		for rectangleObservation in rectangleObservations where stop == false {
+		for rectangleObservation in rectangleObservations {
 			guard let extractedImage = self.extractImageUseCase.imageExtraction(rectangleObservation.value, from: currentImage) else {
 				// remove the detected objects where we cant extract the image
 				if let index = self.detectedObjects.firstIndex(of: rectangleObservation.key) {
@@ -122,7 +120,6 @@ class CameraViewModel {
 			self.stop = false
 		}
 
-		self.objectFrame = self.accurateObjects.map { $0.boundingBox }
-		print(accurateObjects.count)
+		print(self.accurateObjects.count)
 	}
 }

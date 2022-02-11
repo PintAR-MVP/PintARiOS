@@ -43,8 +43,6 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 		self.sceneView.delegate = self
 		self.sceneView.session.delegate = self
 		self.viewportSize = sceneView.frame.size
-		// Set up coaching overlay.
-		self.setupCoachingOverlay()
 	}
 
 	override func viewDidLayoutSubviews() {
@@ -55,13 +53,15 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 	override func viewWillAppear(_ animated: Bool) {
 		super.viewWillAppear(animated)
 
+        self.addedAnchors.removeAll()
 		// Create a session configuration
 		let configuration = ARWorldTrackingConfiguration()
 		configuration.planeDetection = .horizontal
-        sceneView.debugOptions = [ARSCNDebugOptions.showFeaturePoints, ARSCNDebugOptions.showWorldOrigin]
 
 		// Run the view's session
-		self.sceneView.session.run(configuration)
+		self.sceneView.session.run(configuration, options: [.removeExistingAnchors, .resetTracking])
+        // Set up coaching overlay.
+        self.setupCoachingOverlay()
 	}
 
 	private func setupSubscribers() {
@@ -127,7 +127,7 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 			}
 
 			var anchor = ARAnchor(name: observation.id.uuidString, transform: result.worldTransform)
-            anchor = zNormalization(anchor: anchor)
+//            anchor = zNormalization(anchor: anchor)
 
             if isNewAnchor(newResult: result) == true {
                 anchor.box = bounds
@@ -137,7 +137,7 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
                 debugPrint("Drop anchor because it is to close to another anchor")
             }
 		}
-		self.viewModel.stop = self.viewModel.accurateObjects.count > 3
+//		self.viewModel.stop = self.viewModel.accurateObjects.count > 3
 	}
 
     func zNormalization(anchor: ARAnchor) -> ARAnchor {
@@ -156,32 +156,43 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
     func isNewAnchor(newResult: ARRaycastResult) -> Bool {
         let minDistanceX: Float = 0.05
         let minDistanceY: Float = 0.1
-        let minDistanceZ: Float = 0.3
-        var minDistance:Float = 1
+        let minDistanceZ: Float = 0.2
+        var minDistance: Float = 1
         var nearestNeighbor = simd_float4x4()
         let newAnchor = newResult.worldTransform
-        
+        var nearNeighbor:Bool = false
+
         for oldResult in self.addedAnchors {
             let oldAnchor = oldResult.worldTransform
             //not taken into account z direction (towards camera) because that is shifted sometimes.
-            let startPoint = SCNVector3(newAnchor.columns.3.x, newAnchor.columns.3.y, 0)
-            let endPoint = SCNVector3(oldAnchor.columns.3.x, oldAnchor.columns.3.y, 0)
-            let newDistance = startPoint.distance(vector: endPoint)
-            if newDistance < minDistance {
-                minDistance = newDistance
-                nearestNeighbor = oldAnchor
+            let oldAnchorX = oldAnchor.columns.3.x
+            let oldAnchorY = oldAnchor.columns.3.y
+            if(oldAnchorX != 0) && (oldAnchorY != 0) {
+                let startPoint = SCNVector3(newAnchor.columns.3.x, newAnchor.columns.3.y, 0)
+                let endPoint = SCNVector3(oldAnchorX, oldAnchorY, 0)
+                let newDistance = startPoint.distance(vector: endPoint)
+                if newDistance < minDistance {
+                    minDistance = newDistance
+                    nearestNeighbor = oldAnchor
+                    nearNeighbor = true
+                }
             }
         }
+        if nearNeighbor == true {
+            let xDist = abs(newAnchor.columns.3.x - nearestNeighbor.columns.3.x)
+            let yDist = abs(newAnchor.columns.3.y - nearestNeighbor.columns.3.y)
+            let zDist = abs(newAnchor.columns.3.z)
 
-        let xDist = abs(newAnchor.columns.3.x - nearestNeighbor.columns.3.x)
-        let yDist = abs(newAnchor.columns.3.y - nearestNeighbor.columns.3.y)
-        let zDist = abs(newAnchor.columns.3.z)
-
-        debugPrint("xDist: ", xDist)
-        debugPrint("yDist: ", yDist)
-        debugPrint("zDist: ", zDist)
-        if ((xDist < minDistanceX) && (yDist < minDistanceY)) || (zDist < minDistanceZ) {
-            return false
+            debugPrint("xDist: ", xDist)
+            debugPrint("yDist: ", yDist)
+            debugPrint("zDist: ", zDist)
+            if ((xDist < minDistanceX) && (yDist < minDistanceY)) || (zDist < minDistanceZ) {
+                debugPrint("nearest neighbor x: ", nearestNeighbor.columns.3.x)
+                debugPrint("nearest neighbor y: ", nearestNeighbor.columns.3.y)
+                return false
+            } else {
+                return true
+            }
         } else {
             return true
         }
@@ -199,7 +210,7 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 
         let material = SCNMaterial()
         material.isDoubleSided = true
-        material.diffuse.contents = UIImage(named: "vis.png")
+        material.diffuse.contents = UIImage(named: "vis2.png")
         material.transparencyMode = .aOne
 
         plane.materials = [material]
@@ -249,7 +260,6 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 		self.addedAnchors.removeAll()
 		let configuration = ARWorldTrackingConfiguration()
         configuration.planeDetection = .horizontal
-        sceneView.debugOptions = [ARSCNDebugOptions.showFeaturePoints, ARSCNDebugOptions.showWorldOrigin]
 		self.sceneView.session.run(configuration, options: [.removeExistingAnchors, .resetTracking])
 		self.viewModel.stop = false
         self.setupCoachingOverlay()

@@ -45,8 +45,6 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 		self.sceneView.delegate = self
 		self.sceneView.session.delegate = self
 		self.viewportSize = sceneView.frame.size
-		// Set up coaching overlay.
-		self.setupCoachingOverlay()
 	}
 
 	override func viewDidLayoutSubviews() {
@@ -57,13 +55,15 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 	override func viewWillAppear(_ animated: Bool) {
 		super.viewWillAppear(animated)
 
+        self.addedAnchors.removeAll()
 		// Create a session configuration
 		let configuration = ARWorldTrackingConfiguration()
 		configuration.planeDetection = .horizontal
-		self.sceneView.debugOptions = [.showFeaturePoints, .showWorldOrigin]
 
 		// Run the view's session
-		self.sceneView.session.run(configuration)
+		self.sceneView.session.run(configuration, options: [.removeExistingAnchors, .resetTracking])
+        // Set up coaching overlay.
+        self.setupCoachingOverlay()
 	}
 
 	private func setupSubscribers() {
@@ -111,8 +111,8 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 					continue
 			}
 
-			var anchor = ARAnchor(transform: result.worldTransform)
-			anchor = self.zNormalization(anchor: anchor, for: observation.id.uuidString)
+			var anchor = ARAnchor(name: observation.id.uuidString, transform: result.worldTransform)
+//            anchor = zNormalization(anchor: anchor)
 
 			if self.isNewAnchor(newResult: result) == true {
 				self.sceneView.session.add(anchor: anchor)
@@ -121,86 +121,66 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 				debugPrint("Drop anchor because it is to close to another anchor")
 			}
 		}
-
-		// stop recognition and trigger backend call
-		// self.viewModel.stop = self.viewModel.accurateObjects.count > 3
+//		self.viewModel.stop = self.viewModel.accurateObjects.count > 3
 	}
 
-	private func calculateMidPointForRayCast(for box: CGRect) -> CGPoint {
-		let transform = CGAffineTransform(scaleX: 1, y: -1).translatedBy(x: 0, y: -self.sceneView.bounds.height)
-		let scale = CGAffineTransform.identity.scaledBy(x: self.sceneView.bounds.width, y: self.sceneView.bounds.height)
-		let bounds = box.applying(scale).applying(transform)
-		let midPoint = CGPoint(x: bounds.midX, y: bounds.midY)
-		return midPoint
-	}
+    func zNormalization(anchor: ARAnchor) -> ARAnchor {
+        if self.anchorCount > 0 {
+            let zPos = anchor.transform.columns.3.z
+            self.distanceToPlane = (self.distanceToPlane * Float(self.anchorCount - 1) + zPos) / Float(self.anchorCount)
+            self.anchorCount += 1
+            var translation = matrix_identity_float4x4
+            translation.columns.3.z = self.distanceToPlane
+            let transform = simd_mul(anchor.transform, translation)
+            return ARAnchor(transform: transform)
+        }
+        return anchor
+    }
 
-	private func drawCurrentBoundingBox(box: CGRect) {
-		let transform = CGAffineTransform(scaleX: 1, y: -1).translatedBy(x: 0, y: -self.sceneView.bounds.height)
-		let scale = CGAffineTransform.identity.scaledBy(x: self.sceneView.bounds.width, y: self.sceneView.bounds.height)
+    func isNewAnchor(newResult: ARRaycastResult) -> Bool {
+        let minDistanceX: Float = 0.05
+        let minDistanceY: Float = 0.1
+        let minDistanceZ: Float = 0.2
+        var minDistance: Float = 1
+        var nearestNeighbor = simd_float4x4()
+        let newAnchor = newResult.worldTransform
+        var nearNeighbor:Bool = false
 
-		let boxLayer = CAShapeLayer()
-		let bounds = box.applying(scale).applying(transform)
-		boxLayer.frame = bounds
-		boxLayer.cornerRadius = 10
-		boxLayer.opacity = 1
-		boxLayer.borderColor = UIColor.systemBlue.cgColor
-		boxLayer.borderWidth = 6.0
+        for oldResult in self.addedAnchors {
+            let oldAnchor = oldResult.worldTransform
+            //not taken into account z direction (towards camera) because that is shifted sometimes.
+            let oldAnchorX = oldAnchor.columns.3.x
+            let oldAnchorY = oldAnchor.columns.3.y
+            if(oldAnchorX != 0) && (oldAnchorY != 0) {
+                let startPoint = SCNVector3(newAnchor.columns.3.x, newAnchor.columns.3.y, 0)
+                let endPoint = SCNVector3(oldAnchorX, oldAnchorY, 0)
+                let newDistance = startPoint.distance(vector: endPoint)
+                if newDistance < minDistance {
+                    minDistance = newDistance
+                    nearestNeighbor = oldAnchor
+                    nearNeighbor = true
+                }
+            }
+        }
+        if nearNeighbor == true {
+            let xDist = abs(newAnchor.columns.3.x - nearestNeighbor.columns.3.x)
+            let yDist = abs(newAnchor.columns.3.y - nearestNeighbor.columns.3.y)
+            let zDist = abs(newAnchor.columns.3.z)
 
-		self.rectangleMaskLayer.addSublayer(boxLayer)
-		self.sceneView.layer.addSublayer(self.rectangleMaskLayer)
-	}
-
-	private func zNormalization(anchor: ARAnchor, for detectedObjectId: String) -> ARAnchor {
-		if self.anchorCount > 0 {
-			let zPos = anchor.transform.columns.3.z
-			self.distanceToPlane = (self.distanceToPlane * Float(self.anchorCount - 1) + zPos) / Float(self.anchorCount)
-			self.anchorCount += 1
-			var translation = matrix_identity_float4x4
-			translation.columns.3.z = self.distanceToPlane
-			let transform = simd_mul(anchor.transform, translation)
-			let newAnchor = ARAnchor(name: detectedObjectId, transform: transform)
-			return newAnchor
-		}
-
-		return anchor
-	}
-
-	/// Determine if the newRayCast result will produce a new anchor matching the minimum distance threshold
-	/// - Parameter newResult: new rayCast result
-	/// - Returns: true if the new anchor fulfils the minimum distance requirements otherwise false
-	private func isNewAnchor(newResult: ARRaycastResult) -> Bool {
-		let minDistanceX: Float = 0.05
-		let minDistanceY: Float = 0.1
-		let minDistanceZ: Float = 0.3
-		var minDistance: Float = 1
-		var nearestNeighbor = simd_float4x4()
-		let newAnchor = newResult.worldTransform
-
-		for oldResult in self.rayCastResults {
-			let oldAnchor = oldResult.worldTransform
-			//not taken into account z direction (towards camera) because that is shifted sometimes.
-			let startPoint = SCNVector3(newAnchor.columns.3.x, newAnchor.columns.3.y, 0)
-			let endPoint = SCNVector3(oldAnchor.columns.3.x, oldAnchor.columns.3.y, 0)
-			let newDistance = startPoint.distance(vector: endPoint)
-			if newDistance < minDistance {
-				minDistance = newDistance
-				nearestNeighbor = oldAnchor
-			}
-		}
-
-		let xDist = abs(newAnchor.columns.3.x - nearestNeighbor.columns.3.x)
-		let yDist = abs(newAnchor.columns.3.y - nearestNeighbor.columns.3.y)
-		let zDist = abs(newAnchor.columns.3.z)
-
-		debugPrint("xDist: ", xDist)
-		debugPrint("yDist: ", yDist)
-		debugPrint("zDist: ", zDist)
-		if ((xDist < minDistanceX) && (yDist < minDistanceY)) || (zDist < minDistanceZ) {
-			return false
-		} else {
-			return true
-		}
-	}
+            debugPrint("xDist: ", xDist)
+            debugPrint("yDist: ", yDist)
+            debugPrint("zDist: ", zDist)
+            if ((xDist < minDistanceX) && (yDist < minDistanceY)) || (zDist < minDistanceZ) {
+                debugPrint("nearest neighbor x: ", nearestNeighbor.columns.3.x)
+                debugPrint("nearest neighbor y: ", nearestNeighbor.columns.3.y)
+                return false
+            } else {
+                return true
+            }
+        } else {
+            return true
+        }
+    }
 
 	func renderer(_ renderer: SCNSceneRenderer, nodeFor anchor: ARAnchor) -> SCNNode? {
 		guard
@@ -211,10 +191,10 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 
 		let plane = SCNPlane(width: 0.6, height: 0.1)
 
-		let material = SCNMaterial()
-		material.isDoubleSided = true
-		material.diffuse.contents = UIImage(named: "vis.png")
-		material.transparencyMode = .aOne
+        let material = SCNMaterial()
+        material.isDoubleSided = true
+        material.diffuse.contents = UIImage(named: "vis2.png")
+        material.transparencyMode = .aOne
 
 		plane.materials = [material]
 
@@ -263,8 +243,7 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 	private func resetTracking() {
 		self.rayCastResults.removeAll()
 		let configuration = ARWorldTrackingConfiguration()
-		configuration.planeDetection = .horizontal
-		self.sceneView.debugOptions = [ARSCNDebugOptions.showFeaturePoints, ARSCNDebugOptions.showWorldOrigin]
+        configuration.planeDetection = .horizontal
 		self.sceneView.session.run(configuration, options: [.removeExistingAnchors, .resetTracking])
 		self.viewModel.stop = false
 		self.setupCoachingOverlay()

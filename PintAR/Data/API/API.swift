@@ -67,6 +67,7 @@ enum API {
 
 		request.httpBody = body
 
+		print(String(data: body, encoding: .utf8))
 		// Request data
 		return URLSession.shared.dataTaskPublisher(for: request)
 			.tryMap { element -> Data in

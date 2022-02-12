@@ -122,4 +122,19 @@ class CameraViewModel {
 
 		print(self.accurateObjects.count)
 	}
+
+	func requestBackendInformation() {
+		for object in accurateObjects {
+			object.queryBackend()
+			object.$highestScoreProduct
+				.sink { product in
+					guard let currentProduct = product else {
+						return
+					}
+
+					debugPrint(product)
+					object.text = product?.name
+				}
+		}
+	}
 }

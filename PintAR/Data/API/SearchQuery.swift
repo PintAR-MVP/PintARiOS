@@ -13,7 +13,7 @@ struct SearchQuery: Encodable {
 
 	private let text: String
 	private let colorHex: String?
-	private var shape: [[CGFloat]]?
+	private var shape = [[CGFloat]]()
 	private let category: String?
 	private let minimumScore: Int?
 	private let limit: Int?
@@ -49,11 +49,11 @@ struct SearchQuery: Encodable {
 		self.minimumScore = minimumScore
 		self.limit = limit
 
-        for path in (shape?.map { $0.points } ?? []) {
-            for point in path {
-                self.shape?.append([point.x, point.y])
-            }
-        }
+		for path in (shape?.map { $0.points } ?? []) {
+			for point in path {
+				self.shape.append([point.x, point.y])
+			}
+		}
 	}
 
     private static func toHex(color: UIColor?) -> String? {
@@ -79,12 +79,12 @@ struct SearchQuery: Encodable {
 			try colorContainer.encodeIfPresent(colorHex, forKey: NestedCodingKeys.color)
 		}
 
-		if shape != nil {
+		if shape.isEmpty == false {
 			var shapeContainer = container.nestedContainer(keyedBy: NestedCodingKeys.self, forKey: .shapeFilter)
 			try shapeContainer.encodeIfPresent(shape, forKey: NestedCodingKeys.shape)
 		}
 
-		if category != nil {
+		if category != nil, self.category?.isEmpty == false {
 			var categoryContainer = container.nestedContainer(keyedBy: NestedCodingKeys.self, forKey: .categoryFilter)
 			try categoryContainer.encodeIfPresent(category, forKey: NestedCodingKeys.category)
 		}

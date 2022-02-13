@@ -33,6 +33,7 @@
 		CCD96D442753A9EE00786079 /* RectangleDetection.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCD96D432753A9EE00786079 /* RectangleDetection.swift */; };
 		CCD96D462753A9F500786079 /* TextRecognition.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCD96D452753A9F500786079 /* TextRecognition.swift */; };
 		F633966427AC3C20006D9FA1 /* SCNVector3+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = F633966327AC3C20006D9FA1 /* SCNVector3+Extension.swift */; };
+		F69F8F2227B66C2200832412 /* vis2.png in Resources */ = {isa = PBXBuildFile; fileRef = F69F8F2127B66C2200832412 /* vis2.png */; };
 		F6FFD2982769F1880076A3FF /* YOLOv5-train.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = F6FFD2972769F1880076A3FF /* YOLOv5-train.mlmodel */; };
 /* End PBXBuildFile section */
 
@@ -67,6 +68,7 @@
 		CCD96D432753A9EE00786079 /* RectangleDetection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RectangleDetection.swift; sourceTree = "<group>"; };
 		CCD96D452753A9F500786079 /* TextRecognition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextRecognition.swift; sourceTree = "<group>"; };
 		F633966327AC3C20006D9FA1 /* SCNVector3+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SCNVector3+Extension.swift"; sourceTree = "<group>"; };
+		F69F8F2127B66C2200832412 /* vis2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = vis2.png; sourceTree = "<group>"; };
 		F6FFD2972769F1880076A3FF /* YOLOv5-train.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = "YOLOv5-train.mlmodel"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -188,7 +190,7 @@
 		CC16C72E2746800C007E1568 /* Presentation */ = {
 			isa = PBXGroup;
 			children = (
-				0BDAB63027B25CD2003A6EFE /* vis.png */,
+				F69F8F2127B66C2200832412 /* vis2.png */,
 				CC16C72C27465C8E007E1568 /* CameraViewController.swift */,
 				0B02C8FB274D71DE008F0506 /* CameraViewModel.swift */,
 				CC16C71C27465AAE007E1568 /* ImageDetailViewController.swift */,
@@ -278,7 +280,7 @@
 				CC16C72527465AB0007E1568 /* LaunchScreen.storyboard in Resources */,
 				0B40C48A2746C4D500908879 /* main.storyboard in Resources */,
 				CC16C72227465AB0007E1568 /* Assets.xcassets in Resources */,
-				0BDAB63127B25CD2003A6EFE /* vis.png in Resources */,
+				F69F8F2227B66C2200832412 /* vis2.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -512,7 +514,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = pintAR.PintAR.ts;
+				PRODUCT_BUNDLE_IDENTIFIER = ts.pintAR.PintAR;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -530,7 +532,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = UPJ8D34987;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = PintAR/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "This application requires camera access for scanning products.";
@@ -545,7 +547,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = pintAR.PintAR.dk;
+				PRODUCT_BUNDLE_IDENTIFIER = ts.pintAR.PintAR;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;

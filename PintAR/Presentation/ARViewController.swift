@@ -50,14 +50,13 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 
 	override func viewDidLayoutSubviews() {
 		super.viewDidLayoutSubviews()
-		self.viewportSize = sceneView.frame.size
-
+		viewportSize = sceneView.frame.size
 	}
 
 	override func viewWillAppear(_ animated: Bool) {
 		super.viewWillAppear(animated)
-    self.addedAnchors.removeAll()
 
+        self.addedAnchors.removeAll()
 		// Create a session configuration
 		let configuration = ARWorldTrackingConfiguration()
 		configuration.planeDetection = .horizontal
@@ -69,13 +68,13 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 	}
 
 	private func setupSubscribers() {
-		self.viewModel.$accurateObjects
+		self.viewModel.$objectFrame
 			.receive(on: DispatchQueue.main)
-			.sink { [weak self] accurateObjects in
-				self?.removeRectangleMask()
-				self?.configureAnchors(detectedObjects: accurateObjects)
-				self?.currentBuffer = nil
-			}
+			.sink(receiveValue: { frame in
+				self.removeRectangleMask()
+				self.drawBoundingBox(boundingBox: frame)
+				self.currentBuffer = nil
+			})
 			.store(in: &cancellableSet)
 	}
 
@@ -96,9 +95,9 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 		self.viewModel.recognizeObject(image: frame.capturedImage)
 	}
 
-	private func configureAnchors(detectedObjects: [DetectedObject]) {
-		for observation in detectedObjects {
-			guard self.sceneView.session.currentFrame != nil else {
+	private func drawBoundingBox(boundingBox: [CGRect]) {
+		for observation in self.viewModel.accurateObjects {
+			guard let currentFrame = sceneView.session.currentFrame else {
 				debugPrint("skip current frame")
 				continue
 			}
@@ -107,18 +106,22 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 			let scale = CGAffineTransform.identity.scaledBy(x: sceneView.bounds.width, y: sceneView.bounds.height)
 			let bounds = observation.boundingBox.applying(scale).applying(transform)
 			let midPoint = CGPoint(x: bounds.midX, y: bounds.midY)
-      /*
-      let boxLayer = CAShapeLayer()
-      boxLayer.frame = bounds
-      boxLayer.cornerRadius = 10
-      boxLayer.opacity = 1
-      boxLayer.borderColor = UIColor.systemBlue.cgColor
-      boxLayer.borderWidth = 6.0
-      self.rectangleMaskLayer.addSublayer(boxLayer)
-      self.sceneView.layer.addSublayer(self.rectangleMaskLayer)
-      */
-      
+
+            for box in boundingBox {
+                let boxLayer = CAShapeLayer()
+                let bounds = box.applying(scale).applying(transform)
+                boxLayer.frame = bounds
+                boxLayer.cornerRadius = 10
+                boxLayer.opacity = 1
+                boxLayer.borderColor = UIColor.systemBlue.cgColor
+                boxLayer.borderWidth = 6.0
+
+                self.rectangleMaskLayer.addSublayer(boxLayer)
+            }
+
+            self.sceneView.layer.addSublayer(self.rectangleMaskLayer)
 			let query = self.sceneView.raycastQuery(from: midPoint, allowing: .estimatedPlane, alignment: .vertical)
+
 			guard
 				let resultQuery = query,
 				let result = self.sceneView.session.raycast(resultQuery).first else {
@@ -127,23 +130,19 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 			}
 
 			let anchor = ARAnchor(name: observation.id.uuidString, transform: result.worldTransform)
-//    anchor = zNormalization(anchor: anchor)
+//            anchor = zNormalization(anchor: anchor)
 
-
-      // Don't add new anchor if it is too close to existing ones or if there are already more than five
-      if (isNewAnchor(newResult: anchor) == true) && (self.addedAnchors.count < 6) {
-          let visAngle = findVisAngle(newAnchor: anchor)
-          detectedAngles.append(DetectedAngle(id: observation.id, visAngle: visAngle))
-          self.sceneView.session.add(anchor: anchor)
-          self.addedAnchors.insert(anchor)
-      } else {
-          debugPrint("Drop anchor because it is to close to another anchor")
-      }
-
-      self.viewModel.stop = self.addedAnchors.count > 3
-      if self.viewModel.stop {
-			self.viewModel.requestBackendInformation()
+            // Don't add new anchor if it is too close to existing ones or if there are already more than five
+            if (isNewAnchor(newResult: anchor) == true) && (self.addedAnchors.count < 6) {
+                let visAngle = findVisAngle(newAnchor: anchor)
+                detectedAngles.append(DetectedAngle(id: observation.id, visAngle: visAngle))
+                self.sceneView.session.add(anchor: anchor)
+                self.addedAnchors.insert(anchor)
+            } else {
+                debugPrint("Drop anchor because it is to close to another anchor")
+            }
 		}
+        self.viewModel.stop = self.addedAnchors.count > 3
 	}
 
     func zNormalization(anchor: ARAnchor) -> ARAnchor {
@@ -185,24 +184,21 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
                 }
             }
         }
-       guard nearNeighbour else {
-			    return true
-		   }
+        if nearNeighbor == true {
+            let xDist = abs(newAnchor.columns.3.x - nearestNeighbor.columns.3.x)
+            let yDist = abs(newAnchor.columns.3.y - nearestNeighbor.columns.3.y)
+            let zDist = abs(newAnchor.columns.3.z)
 
-      let xDist = abs(newAnchor.columns.3.x - nearestNeighbor.columns.3.x)
-      let yDist = abs(newAnchor.columns.3.y - nearestNeighbor.columns.3.y)
-      let zDist = abs(newAnchor.columns.3.z)
-
-      debugPrint("xDist: ", xDist)
-      debugPrint("yDist: ", yDist)
-      debugPrint("zDist: ", zDist)
-      if ((xDist < minDistanceX) && (yDist < minDistanceY)) || (zDist < minDistanceZ) {
-        debugPrint("nearest neighbor x: ", nearestNeighbor.columns.3.x)
-        debugPrint("nearest neighbor y: ", nearestNeighbor.columns.3.y)
-        return false
-      } else {
-        return true
-      }
+            if ((xDist < minDistanceX) && (yDist < minDistanceY)) || (zDist < minDistanceZ) {
+                debugPrint("nearest neighbor x: ", nearestNeighbor.columns.3.x)
+                debugPrint("nearest neighbor y: ", nearestNeighbor.columns.3.y)
+                return false
+            } else {
+                return true
+            }
+        } else {
+            return true
+        }
     }
 
     func findVisAngle(newAnchor: ARAnchor) -> Int {
@@ -276,56 +272,54 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 				return nil
 		}
 
-    let visAngle = self.detectedAngles.first(where: { $0.id.uuidString == observationId })?.visAngle
-    let plane = SCNPlane(width: 0.6, height: 0.1)
-    let material = SCNMaterial()
-    material.isDoubleSided = true
-    switch visAngle {
-    case 0:
-        material.diffuse.contents = UIImage(named: "vis1.png")
-    case 1:
-        material.diffuse.contents = UIImage(named: "vis2.png")
-    case 2:
-        material.diffuse.contents = UIImage(named: "vis3.png")
-    case 3:
-        material.diffuse.contents = UIImage(named: "vis4.png")
-    default:
-        debugPrint("found no vis angle")
-        material.diffuse.contents = UIImage(named: "vis2.png")
-    }
+        let visAngle = self.detectedAngles.first(where: { $0.id.uuidString == observationId })?.visAngle
+        let plane = SCNPlane(width: 0.6, height: 0.1)
+        let material = SCNMaterial()
+        material.isDoubleSided = true
+        switch visAngle {
+        case 0:
+            material.diffuse.contents = UIImage(named: "vis1.png")
+        case 1:
+            material.diffuse.contents = UIImage(named: "vis2.png")
+        case 2:
+            material.diffuse.contents = UIImage(named: "vis3.png")
+        case 3:
+            material.diffuse.contents = UIImage(named: "vis4.png")
+        default:
+            debugPrint("found no vis angle")
+            material.diffuse.contents = UIImage(named: "vis2.png")
+        }
 
-    material.transparencyMode = .aOne
-    plane.materials = [material]
-
+        material.transparencyMode = .aOne
+        plane.materials = [material]
 		let planeNode = SCNNode(geometry: plane)
 
 		//rotate with respect to camera
 		planeNode.rotation = SCNVector4Make(-1, 0, 0, .pi / 2)
 
+        let node = SCNNode()
+        node.addChildNode(planeNode)
 
-    let node = SCNNode()
-    node.addChildNode(planeNode)
-
-    let bioNode = textNode(currentObservation.text ?? "test", font: UIFont.systemFont(ofSize: 10), maxWidth: nil)
-    bioNode.pivotOnTopLeft()
-    switch visAngle {
-    case 0:
-        bioNode.position.x -= 0.25
-        bioNode.position.y += 0.06
-    case 1:
-        bioNode.position.x += 0.05
-        bioNode.position.y += 0.06
-    case 2:
-        bioNode.position.x += 0.05
-        bioNode.position.y -= 0.017
-    case 3:
-        bioNode.position.x -= 0.25
-        bioNode.position.y -= 0.017
-    default:
-        debugPrint("found no vis angle")
-    }
-    planeNode.addChildNode(bioNode)
-    return node
+        let bioNode = textNode(currentObservation.text ?? "test", font: UIFont.systemFont(ofSize: 10), maxWidth: nil)
+        bioNode.pivotOnTopLeft()
+        switch visAngle {
+        case 0:
+            bioNode.position.x -= 0.25
+            bioNode.position.y += 0.06
+        case 1:
+            bioNode.position.x += 0.05
+            bioNode.position.y += 0.06
+        case 2:
+            bioNode.position.x += 0.05
+            bioNode.position.y -= 0.017
+        case 3:
+            bioNode.position.x -= 0.25
+            bioNode.position.y -= 0.017
+        default:
+            debugPrint("found no vis angle")
+        }
+        planeNode.addChildNode(bioNode)
+        return node
 	}
 
 	func textNode(_ str: String, font: UIFont, maxWidth: Int? = nil) -> SCNNode {
@@ -350,22 +344,20 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 		self.resetTracking()
 	}
 
-	/// Resets all tracking
 	private func resetTracking() {
-		self.rayCastResults.removeAll()
+		self.addedAnchors.removeAll()
 		let configuration = ARWorldTrackingConfiguration()
         configuration.planeDetection = .horizontal
 		self.sceneView.session.run(configuration, options: [.removeExistingAnchors, .resetTracking])
 		self.viewModel.stop = false
-		self.setupCoachingOverlay()
-		self.anchorCount = 0
+        self.setupCoachingOverlay()
+        self.anchorCount = 0
 	}
 
-	/// Removes the bounding box layer
-	private func removeRectangleMask() {
-		self.rectangleMaskLayer.sublayers?.removeAll()
-		self.rectangleMaskLayer.removeFromSuperlayer()
-	}
+    private func removeRectangleMask() {
+        self.rectangleMaskLayer.sublayers?.removeAll()
+        self.rectangleMaskLayer.removeFromSuperlayer()
+    }
 }
 
 
@@ -383,27 +375,22 @@ extension ARViewController: ARCoachingOverlayViewDelegate {
 
 	/// - Tag: PresentUI
 	func coachingOverlayViewDidDeactivate(_ coachingOverlayView: ARCoachingOverlayView) {
-		self.sceneView.scene.rootNode.enumerateChildNodes { currentNode, _ in
-			self.distanceToPlane = currentNode.simdPosition.z
-			debugPrint("Distance to plane: ", self.distanceToPlane)
-		}
-
 		self.viewModel.stop = false
 		self.currentBuffer = nil
 		self.sessionState = .ready
-    debugPrint("detected a Plane")
-    self.sceneView.scene.rootNode.enumerateChildNodes { currentNode, _ in
-        self.distanceToPlane = currentNode.simdPosition.z
-        debugPrint("Distance to plane: ", self.distanceToPlane)
-    }
+        debugPrint("detected a Plane")
+        self.sceneView.scene.rootNode.enumerateChildNodes { currentNode, _ in
+            self.distanceToPlane = currentNode.simdPosition.z
+            debugPrint("Distance to plane: ", self.distanceToPlane)
+        }
 	}
 
 	/// - Tag: StartOver
 	func coachingOverlayViewDidRequestSessionReset(_ coachingOverlayView: ARCoachingOverlayView) {
-		self.resetTracking()
+		// restartExperience()
 	}
 
-	private func setupCoachingOverlay() {
+	func setupCoachingOverlay() {
 		// Set up coaching view
 		self.coachingOverlay.session = sceneView.session
 		self.coachingOverlay.delegate = self
@@ -419,7 +406,6 @@ extension ARViewController: ARCoachingOverlayViewDelegate {
 		])
 
 		self.setActivatesAutomatically()
-		self.coachingOverlay.setActive(true, animated: true)
 
 		// Most of the virtual objects in this sample require a horizontal surface,
 		// therefore coach the user to find a horizontal plane.
@@ -427,12 +413,12 @@ extension ARViewController: ARCoachingOverlayViewDelegate {
 	}
 
 	/// - Tag: CoachingActivatesAutomatically
-	private func setActivatesAutomatically() {
+	func setActivatesAutomatically() {
 		self.coachingOverlay.activatesAutomatically = true
 	}
 
 	/// - Tag: CoachingGoal
 	func setGoal() {
-		self.coachingOverlay.goal = .tracking
+		coachingOverlay.goal = .verticalPlane
 	}
 }

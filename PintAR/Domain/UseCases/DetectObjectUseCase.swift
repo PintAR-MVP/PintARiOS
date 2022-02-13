@@ -89,7 +89,7 @@ class DetectObjectUseCase: DetectObjectUseCaseProtocol {
 		  print("status == kCVReturnPixelBufferNotOpenGLCompatible")
 		}
 
-		guard status == kCVReturnSuccess else {
+		guard (status == kCVReturnSuccess) else {
 		  return nil
 		}
 

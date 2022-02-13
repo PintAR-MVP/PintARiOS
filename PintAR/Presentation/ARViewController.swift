@@ -22,11 +22,14 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 	private var viewportSize: CGSize = .zero
 	private var cameraLiveViewLayer: SKScene?
 	private var rectangleMaskLayer = CAShapeLayer()
-    private var addedAnchors = Set<ARRaycastResult>()
+
+    //    Keep track of placed anchors and planes
+    private var addedAnchors = Set<ARAnchor>()
 	private var sessionState: SessionState = .settingUp
     private var distanceToPlane = Float()
     private var anchorCount = Int()
-
+    private var detectedAngles = [DetectedAngle]()
+    
 	// The pixel buffer being held for analysis; used to serialize Vision requests.
 	private var currentBuffer: CVPixelBuffer?
 	private lazy var viewModel = CameraViewModel(detectObjectUseCase: DetectObjectUseCase(detectionTypes: [.rectangles(model: .yoloV5)]))
@@ -126,21 +129,24 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 					continue
 			}
 
-			var anchor = ARAnchor(name: observation.id.uuidString, transform: result.worldTransform)
+			let anchor = ARAnchor(name: observation.id.uuidString, transform: result.worldTransform)
 //            anchor = zNormalization(anchor: anchor)
 
-            if isNewAnchor(newResult: result) == true {
-                anchor.box = bounds
+            // Don't add new anchor if it is too close to existing ones or if there are already more than five
+            if (isNewAnchor(newResult: anchor) == true) && (self.addedAnchors.count < 6) {
+                let visAngle = findVisAngle(newAnchor: anchor)
+                detectedAngles.append(DetectedAngle(id: observation.id, visAngle: visAngle))
                 self.sceneView.session.add(anchor: anchor)
-                self.addedAnchors.insert(result)
+                self.addedAnchors.insert(anchor)
             } else {
                 debugPrint("Drop anchor because it is to close to another anchor")
             }
 		}
-//		self.viewModel.stop = self.viewModel.accurateObjects.count > 3
+        self.viewModel.stop = self.addedAnchors.count > 3
 	}
 
     func zNormalization(anchor: ARAnchor) -> ARAnchor {
+        // Normalize z-position of anchors over time (so they are more or less on the same plane even if raycast fails)
         if self.anchorCount > 0 {
             let zPos = anchor.transform.columns.3.z
             self.distanceToPlane = (self.distanceToPlane * Float(self.anchorCount - 1) + zPos) / Float(self.anchorCount)
@@ -153,17 +159,17 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
         return anchor
     }
 
-    func isNewAnchor(newResult: ARRaycastResult) -> Bool {
+    func isNewAnchor(newResult: ARAnchor) -> Bool {
+        // Check if the Anchor was already place before (another ANhcor is really close by)
         let minDistanceX: Float = 0.05
         let minDistanceY: Float = 0.1
         let minDistanceZ: Float = 0.2
         var minDistance: Float = 1
         var nearestNeighbor = simd_float4x4()
-        let newAnchor = newResult.worldTransform
-        var nearNeighbor:Bool = false
-
+        let newAnchor = newResult.transform
+        var nearNeighbor: Bool = false
         for oldResult in self.addedAnchors {
-            let oldAnchor = oldResult.worldTransform
+            let oldAnchor = oldResult.transform
             //not taken into account z direction (towards camera) because that is shifted sometimes.
             let oldAnchorX = oldAnchor.columns.3.x
             let oldAnchorY = oldAnchor.columns.3.y
@@ -183,9 +189,6 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
             let yDist = abs(newAnchor.columns.3.y - nearestNeighbor.columns.3.y)
             let zDist = abs(newAnchor.columns.3.z)
 
-            debugPrint("xDist: ", xDist)
-            debugPrint("yDist: ", yDist)
-            debugPrint("zDist: ", zDist)
             if ((xDist < minDistanceX) && (yDist < minDistanceY)) || (zDist < minDistanceZ) {
                 debugPrint("nearest neighbor x: ", nearestNeighbor.columns.3.x)
                 debugPrint("nearest neighbor y: ", nearestNeighbor.columns.3.y)
@@ -198,38 +201,123 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
         }
     }
 
+    func findVisAngle(newAnchor: ARAnchor) -> Int {
+        // Return quarant which is best to visualize (default: 1 - top-right)
+        var visQuadrantList: [Double] = [0, 0, 0, 0] //top-left, top-right, bottom-right, bottom-left
+        let newAnchorX = newAnchor.transform.columns.3.x
+        let newAnchorY = newAnchor.transform.columns.3.y
+        if self.addedAnchors.isEmpty {
+            debugPrint("No anchors yet, default")
+            return 1
+        } else {
+            for oldAnchor in self.addedAnchors {
+                //not taken into account z direction (towards camera) because that is shifted sometimes.
+                let oldAnchorX = oldAnchor.transform.columns.3.x
+                let oldAnchorY = oldAnchor.transform.columns.3.y
+                if(oldAnchorX != 0) && (oldAnchorY != 0) {
+                    let startPoint = SCNVector3(newAnchorX, newAnchorY, 0)
+                    let endPoint = SCNVector3(oldAnchorX, oldAnchorY, 0)
+                    let distance = startPoint.distance(vector: endPoint)
+                    if distance < 0.7 {
+                        guard let currentObservation = self.detectedAngles.first(where: { $0.id.uuidString == oldAnchor.name }) else {
+                            debugPrint("Could not load current visAngle")
+                            return 1
+                        }
+
+                        let oldVisAngle = currentObservation.visAngle
+                        let intersectQuadrantList = isVisOverlapping(visQuadrant: oldVisAngle, newAnchorX: Double(newAnchorX), newAnchorY: Double(newAnchorY), oldAnchorX: Double(oldAnchorX), oldAnchorY: Double(oldAnchorY))
+                        visQuadrantList = zip(visQuadrantList, intersectQuadrantList).map(+)
+                    }
+                }
+                debugPrint(newAnchorX, newAnchorY, oldAnchorX, oldAnchorY, visQuadrantList)
+            }
+            if let maxValue = visQuadrantList.min(), let index = visQuadrantList.firstIndex(of: maxValue) {
+                debugPrint("Best Quadrant for vis is: ", index)
+                return index
+            } else {
+                debugPrint("Couldn't find optimal vis Quadrant, default")
+                return 1
+            }
+        }
+    }
+
+    func isVisOverlapping(visQuadrant: Int, newAnchorX: Double, newAnchorY: Double, oldAnchorX: Double, oldAnchorY: Double) -> [Double] {
+        // Calculate Intersection between Visualisation of old and possible new Anchors
+        var visQuadrantList: [Double] = [0, 0, 0, 0] //top-left, top-right, bottom-right, bottom-left
+        let oldQuadrants = makeQuadrants(x: oldAnchorX, y: oldAnchorY)
+        let newQuadrants = makeQuadrants(x: newAnchorX, y: newAnchorY)
+
+        for (i, newQuadrant) in newQuadrants.enumerated() {
+            visQuadrantList[i] += newQuadrant.rectIntersectionInPerc(r: oldQuadrants[visQuadrant])
+        }
+        return visQuadrantList
+    }
+
+     func makeQuadrants(x: Double, y: Double) -> [CGRect] {
+         // making array of four CGRects where a visualisation is possible (top-left, top-right, bottom-right, bottom-left)
+         let w = 0.30
+         let h = 0.05
+         let space = 0.04
+         let topleft = CGRect(x: -w + x, y: y + space, width: w, height: h)
+         let topright = CGRect(x: x, y: y + space, width: w, height: h)
+         let bottomright = CGRect(x: x, y: -h + y - space, width: w, height: h)
+         let bottomleft = CGRect(x: -w + x, y: -h + y - space, width: w, height: h)
+         return [topleft, topright, bottomright, bottomleft]
+     }
+
 	func renderer(_ renderer: SCNSceneRenderer, nodeFor anchor: ARAnchor) -> SCNNode? {
 		guard
 			let observationId = anchor.name,
-			let currentObservation = self.viewModel.accurateObjects.first(where: { $0.id.uuidString == observationId })  else {
+			let currentObservation = self.viewModel.accurateObjects.first(where: { $0.id.uuidString == observationId }) else {
 				return nil
 		}
 
-//		let plane = SCNPlane(width: (anchor.box.width / 500), height: (anchor.box.height / 500))
+        let visAngle = self.detectedAngles.first(where: { $0.id.uuidString == observationId })?.visAngle
         let plane = SCNPlane(width: 0.6, height: 0.1)
-
         let material = SCNMaterial()
         material.isDoubleSided = true
-        material.diffuse.contents = UIImage(named: "vis2.png")
+        switch visAngle {
+        case 0:
+            material.diffuse.contents = UIImage(named: "vis1.png")
+        case 1:
+            material.diffuse.contents = UIImage(named: "vis2.png")
+        case 2:
+            material.diffuse.contents = UIImage(named: "vis3.png")
+        case 3:
+            material.diffuse.contents = UIImage(named: "vis4.png")
+        default:
+            debugPrint("found no vis angle")
+            material.diffuse.contents = UIImage(named: "vis2.png")
+        }
+
         material.transparencyMode = .aOne
-
         plane.materials = [material]
-
 		let planeNode = SCNNode(geometry: plane)
 
 		//rotate with respect to camera
 		planeNode.rotation = SCNVector4Make(-1, 0, 0, .pi / 2)
-//		planeNode.pivotOnTopLeft()
 
         let node = SCNNode()
         node.addChildNode(planeNode)
 
         let bioNode = textNode(currentObservation.text ?? "test", font: UIFont.systemFont(ofSize: 10), maxWidth: nil)
         bioNode.pivotOnTopLeft()
-
-        bioNode.position.x += 0.05
-        bioNode.position.y += 0.06
-
+        switch visAngle {
+        case 0:
+            bioNode.position.x -= 0.25
+            bioNode.position.y += 0.06
+        case 1:
+            bioNode.position.x += 0.05
+            bioNode.position.y += 0.06
+        case 2:
+            bioNode.position.x += 0.05
+            bioNode.position.y -= 0.017
+        case 3:
+            bioNode.position.x -= 0.25
+            bioNode.position.y -= 0.017
+        default:
+            debugPrint("found no vis angle")
+        }
         planeNode.addChildNode(bioNode)
         return node
 	}
@@ -272,21 +360,6 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
     }
 }
 
-extension ARAnchor {
-
-	struct Holder {
-		static var _box:CGRect = CGRect()
-	}
-
-	var box:CGRect {
-		get {
-			return Holder._box
-		}
-		set(newValue) {
-			Holder._box = newValue
-		}
-	}
-}
 
 /// - Tag: CoachingOverlayViewDelegate
 extension ARViewController: ARCoachingOverlayViewDelegate {

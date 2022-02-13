@@ -11,7 +11,7 @@ import Combine
 
 class CameraViewModel {
 
-	@Published var accurateObjects = [DetectedObject]()
+	@Published private(set) var accurateObjects = [DetectedObject]()
 
 	private let recognizeObjectQueue = DispatchQueue(label: "RecognizeObject", qos: .userInitiated)
 	private var cancellableSet: Set<AnyCancellable> = []
@@ -112,6 +112,9 @@ class CameraViewModel {
 			result.text = self.textRecognition.recognizeText(in: detectedObjectImage)
 		}
 
+        // Stop all previous requests
+        accurateObjects.forEach({ $0.cancelRequest() })
+
 		self.accurateObjects = self.detectedObjects.filter { $0.image != nil && $0.text != nil }
 
 		if self.accurateObjects.isEmpty {
@@ -120,21 +123,10 @@ class CameraViewModel {
 			self.stop = false
 		}
 
+        // Start queries
+        accurateObjects.forEach({ $0.queryBackend() })
+        print("\(accurateObjects.count) Queries started")
+
 		print(self.accurateObjects.count)
-	}
-
-	func requestBackendInformation() {
-		for object in accurateObjects {
-			object.queryBackend()
-			object.$highestScoreProduct
-				.sink { product in
-					guard let currentProduct = product else {
-						return
-					}
-
-					debugPrint(product)
-					object.text = product?.name
-				}
-		}
 	}
 }

@@ -110,7 +110,7 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 				boxLayer.frame = bounds
 				boxLayer.cornerRadius = 10
 				boxLayer.opacity = 1
-				boxLayer.borderColor = UIColor.systemBlue.cgColor
+				boxLayer.borderColor = UIColor.clear.cgColor
 				boxLayer.borderWidth = 6.0
 
 				self.rectangleMaskLayer.addSublayer(boxLayer)
@@ -124,20 +124,26 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 					continue
 			}
 
+            self.viewModel.stop = self.rayCastResults.count > 2
+
 			let anchor = ARAnchor(name: observation.id.uuidString, transform: result.worldTransform)
 //            anchor = zNormalization(anchor: anchor)
 
-			if self.isNewAnchor(newResult: result) == true {
+            if observation.highestScoreProduct == nil, isNewAnchor(newResult: result) {
+                // Observe API response and add
+                observation.$highestScoreProduct
+                    .sink(receiveValue: { value in
+                        if value != nil {
+                            self.sceneView.session.add(anchor: anchor)
+                            self.rayCastResults.insert(result)
+                        }
+                    }).store(in: &cancellableSet)
+            } else if self.isNewAnchor(newResult: result) == true {
 				self.sceneView.session.add(anchor: anchor)
 				self.rayCastResults.insert(result)
 			} else {
 				debugPrint("Drop anchor because it is to close to another anchor")
 			}
-		}
-
-		self.viewModel.stop = self.rayCastResults.count > 2
-		if self.viewModel.stop {
-			self.viewModel.requestBackendInformation()
 		}
 	}
 
@@ -225,7 +231,7 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 		let node = SCNNode()
 		node.addChildNode(planeNode)
 
-		let bioNode = textNode(currentObservation.text ?? "test", font: UIFont.systemFont(ofSize: 10), maxWidth: nil)
+        let bioNode = textNode(currentObservation.highestScoreProduct?.name ?? "Unknown", font: UIFont.systemFont(ofSize: 10), maxWidth: nil)
 		bioNode.pivotOnTopLeft()
 
 		bioNode.position.x += 0.05

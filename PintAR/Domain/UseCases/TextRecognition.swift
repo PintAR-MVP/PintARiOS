@@ -6,37 +6,49 @@
 //
 
 import Vision
+import UIKit
 import Combine
 
-class TextRecognition: DetectionTask {
+protocol TextRecognitionProtocol {
 
-    var result = CurrentValueSubject<[String], Never>([])
+	/// Recognise text in the image
+	/// - Parameter image: image where the text should be recognised
+	/// - Returns: comma separated strings of representing the recognised text
+	func recognizeText(in image: UIImage) -> String?
+}
 
-    private let fastRecognition: Bool
+struct TextRecognition: TextRecognitionProtocol {
 
-	init(fastRecognition: Bool) {
+	private let fastRecognition: Bool
+	private let languages: [String]
+
+	init(fastRecognition: Bool, languages: [String] = ["de-DE"]) {
 		self.fastRecognition = fastRecognition
+		self.languages = languages
 	}
 
-	func setup() -> VNRequest? {
-		let textDetectionRequest = VNRecognizeTextRequest { request, _ in
-
-			guard let observations = request.results as? [VNRecognizedTextObservation] else {
-				return
-			}
-			let recognizedStrings = observations.compactMap { observation in
-				return observation.topCandidates(1).first?.string
-			}
-
-            self.result.value = recognizedStrings
+	func recognizeText(in image: UIImage) -> String? {
+		guard let currentImage = image.cgImage else {
+			return nil
 		}
 
-		textDetectionRequest.recognitionLevel = fastRecognition ? .fast : .accurate
-		textDetectionRequest.recognitionLanguages = ["de-DE"]
-		return textDetectionRequest
-	}
+		let textDetectionRequest = VNRecognizeTextRequest()
+		textDetectionRequest.recognitionLevel = self.fastRecognition ? .fast : .accurate
+		textDetectionRequest.recognitionLanguages = self.languages
 
-    static func convert(value: Any?) -> CurrentValueSubject<[String], Never>? {
-        return value as? CurrentValueSubject<[String], Never>
-    }
+		let handler = VNImageRequestHandler(cgImage: currentImage, options: [:])
+		try? handler.perform([textDetectionRequest])
+		guard let results = textDetectionRequest.results else {
+			return nil
+		}
+
+		var resultString = ""
+		for result in results {
+			if let topCandidate = result.topCandidates(1).first?.string {
+				resultString.append(topCandidate + ",")
+			}
+		}
+
+		return resultString.isEmpty ? nil : resultString
+	}
 }

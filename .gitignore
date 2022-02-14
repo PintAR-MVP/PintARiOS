@@ -27,7 +27,8 @@ Pods/
 *.xccheckout
 *.xcscmblueprint
 R.generated.swift
-
+*.DS_Store
+ 
 ## Obj-C/Swift specific
 *.hmap
 *.ipa

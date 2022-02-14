@@ -9,6 +9,7 @@ import Foundation
 import Vision
 import Combine
 import CoreImage
+import UIKit
 
 class DetectObjectUseCase: DetectObjectUseCaseProtocol {
 
@@ -18,16 +19,11 @@ class DetectObjectUseCase: DetectObjectUseCaseProtocol {
 
 	enum DetectionType: Hashable {
 		case rectangles(model: RectangleDetection.Model)
-		case text(fastRecognition: Bool)
-		case contour
-		case color
 	}
 
 	private let detectionTypes: [DetectionType]
 	private var requests = [VNRequest]()
-	private var preProcessedRequests = [VNRequest]()
 	private var requestCompletionHandler: VNImageRequestHandler?
-	private var preProcessedRequestCompletionHandler: VNImageRequestHandler?
 	private var cancellableSet: Set<AnyCancellable> = []
 	private let colorDetection = ColorDetection()
 
@@ -41,47 +37,64 @@ class DetectObjectUseCase: DetectObjectUseCaseProtocol {
 		requests = detectionTypes.compactMap({ detectionType in
 			do {
 				switch detectionType {
-					case .rectangles(let model):
-						let detectionTask = RectangleDetection(model: model)
-						results[detectionType] = detectionTask.result
-						return try detectionTask.setup()
-					case .text(let fastRecognition):
-						let detectionTask = TextRecognition(fastRecognition: fastRecognition)
-						results[detectionType] = detectionTask.result
-						return detectionTask.setup()
-					case .contour:
-						return nil // Should be included in the preProcessedRequests
-					case .color:
-						let detectionTask = colorDetection
-						results[detectionType] = detectionTask.result
-						return detectionTask.setup()
+				case .rectangles(let model):
+					let detectionTask = RectangleDetection(model: model)
+					self.results[detectionType] = detectionTask.result
+					return try detectionTask.setup()
 				}
 			} catch {
 				print("Setting up detection task \(detectionType) failed with \(error)")
 				return nil
 			}
 		})
-
-		// Setup contour detection in a separate VNRequestArray
-		let detectionTask = ContourDetection()
-		results[.contour] = detectionTask.result
-		if let request = detectionTask.setup() {
-			preProcessedRequests = [request]
-		}
 	}
 
 	func recognizeObject(in image: CVPixelBuffer) {
-		self.requestCompletionHandler = VNImageRequestHandler(cvPixelBuffer: image, options: [:])
-
-		if detectionTypes.contains(.color), let averageColor = colorDetection.getAverageColor(image: CIImage(cvPixelBuffer: image)) {
-			colorDetection.result.send(colorDetection.getRGBA(for: averageColor))
+		let rotatedImage = CIImage(cvImageBuffer: image).oriented(.right)
+		guard let correctImage = self.createPixelBufferFrom(image: rotatedImage) else {
+			debugPrint("failed")
+			return
 		}
 
-		if detectionTypes.contains(.contour), let cgImage = ContourDetection.preprocess(buffer: image) {
-			self.preProcessedRequestCompletionHandler = VNImageRequestHandler(cgImage: cgImage, options: [:])
-			try? self.preProcessedRequestCompletionHandler?.perform(self.preProcessedRequests)
-		}
-
+		self.requestCompletionHandler = VNImageRequestHandler(cvPixelBuffer: correctImage, orientation: .up, options: [:])
 		try? self.requestCompletionHandler?.perform(self.requests)
 	}
+
+	let context = CIContext()
+
+	// Function
+	func createPixelBufferFrom(image: CIImage) -> CVPixelBuffer? {
+		// based on https://stackoverflow.com/questions/54354138/how-can-you-make-a-cvpixelbuffer-directly-from-a-ciimage-instead-of-a-uiimage-in
+
+		let attrs = [
+		  kCVPixelBufferCGImageCompatibilityKey: false,
+		  kCVPixelBufferCGBitmapContextCompatibilityKey: false,
+		  kCVPixelBufferWidthKey: Int(image.extent.width),
+		  kCVPixelBufferHeightKey: Int(image.extent.height)
+		] as CFDictionary
+
+		var pixelBuffer: CVPixelBuffer?
+		let status = CVPixelBufferCreate(kCFAllocatorDefault, Int(image.extent.width), Int(image.extent.height), kCVPixelFormatType_32BGRA, attrs, &pixelBuffer)
+
+		if status == kCVReturnInvalidPixelFormat {
+		  print("status == kCVReturnInvalidPixelFormat")
+		}
+		if status == kCVReturnInvalidSize {
+		  print("status == kCVReturnInvalidSize")
+		}
+		if status == kCVReturnPixelBufferNotMetalCompatible {
+		  print("status == kCVReturnPixelBufferNotMetalCompatible")
+		}
+		if status == kCVReturnPixelBufferNotOpenGLCompatible {
+		  print("status == kCVReturnPixelBufferNotOpenGLCompatible")
+		}
+
+		guard status == kCVReturnSuccess else {
+		  return nil
+		}
+
+		// swiftlint:disable:next force_unwrapping
+		context.render(image, to: pixelBuffer!)
+		return pixelBuffer
+	  }
 }

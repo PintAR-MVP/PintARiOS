@@ -17,6 +17,7 @@
 		0B4507F927944795008D4AB3 /* ARViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B4507F827944795008D4AB3 /* ARViewController.swift */; };
 		0BAA26812789D23100E10D28 /* ExtractImageUseCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BAA26802789D23100E10D28 /* ExtractImageUseCase.swift */; };
 		0BAA26842789DDAD00E10D28 /* DetectedObject.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BAA26832789DDAD00E10D28 /* DetectedObject.swift */; };
+		0BDAB63127B25CD2003A6EFE /* vis.png in Resources */ = {isa = PBXBuildFile; fileRef = 0BDAB63027B25CD2003A6EFE /* vis.png */; };
 		91EEE061F85B0C07D8EDB313 /* Pods_PintAR.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 33DF1B1870E6ABAFE139D29F /* Pods_PintAR.framework */; };
 		CC16AD972785CDB80016C47F /* ColorDetection.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC16AD962785CDB80016C47F /* ColorDetection.swift */; };
 		CC16C71927465AAE007E1568 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC16C71827465AAE007E1568 /* AppDelegate.swift */; };
@@ -52,6 +53,7 @@
 		0B4507F827944795008D4AB3 /* ARViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ARViewController.swift; sourceTree = "<group>"; };
 		0BAA26802789D23100E10D28 /* ExtractImageUseCase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtractImageUseCase.swift; sourceTree = "<group>"; };
 		0BAA26832789DDAD00E10D28 /* DetectedObject.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetectedObject.swift; sourceTree = "<group>"; };
+		0BDAB63027B25CD2003A6EFE /* vis.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = vis.png; sourceTree = "<group>"; };
 		165B6C22C262B2B1B7422BDC /* Pods-PintAR.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-PintAR.debug.xcconfig"; path = "Target Support Files/Pods-PintAR/Pods-PintAR.debug.xcconfig"; sourceTree = "<group>"; };
 		33DF1B1870E6ABAFE139D29F /* Pods_PintAR.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_PintAR.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		60E5E2B9B392A09CF780013B /* Pods-PintAR.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-PintAR.release.xcconfig"; path = "Target Support Files/Pods-PintAR/Pods-PintAR.release.xcconfig"; sourceTree = "<group>"; };

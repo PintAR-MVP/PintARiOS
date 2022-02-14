@@ -71,11 +71,12 @@ class CameraViewController: UIViewController {
 	}
 
 	private func setupSubscribers() {
-		self.viewModel.$objectFrame
+		self.viewModel.$accurateObjects
 			.receive(on: DispatchQueue.main)
-			.sink(receiveValue: { frame in
+			.sink(receiveValue: { accurateObjects in
+				let boxes = accurateObjects.map { $0.boundingBox }
 				self.removeRectangleMask()
-				self.drawBoundingBox(boundingBox: frame)
+				self.drawBoundingBox(boundingBox: boxes)
 			})
 			.store(in: &cancellableSet)
 	}
@@ -231,6 +232,10 @@ class CameraViewController: UIViewController {
 
 	@objc private func takePhoto() {
 		self.isTapped.toggle()
+        // Start backend calls
+        for detectedObject in viewModel.accurateObjects {
+            isTapped ? detectedObject.queryBackend() : detectedObject.cancelRequest()
+        }
 	}
 
 	private func showDetailImageView(with image: UIImage?) {

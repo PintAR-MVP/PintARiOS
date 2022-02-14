@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  SCNVector3+Extension.swift
 //  PintAR
 //
 //  Created by Tim Schröder on 03.02.22.

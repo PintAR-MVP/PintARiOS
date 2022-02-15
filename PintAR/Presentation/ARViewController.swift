@@ -274,38 +274,60 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
      }
 
 	func renderer(_ renderer: SCNSceneRenderer, nodeFor anchor: ARAnchor) -> SCNNode? {
-		guard
-			let observationId = anchor.name,
-			let currentObservation = self.viewModel.accurateObjects.first(where: { $0.id.uuidString == observationId })  else {
-				return nil
-		}
+        guard
+            let observationId = anchor.name,
+            let currentObservation = self.viewModel.accurateObjects.first(where: { $0.id.uuidString == observationId }) else {
+                return nil
+        }
 
-		let plane = SCNPlane(width: 0.6, height: 0.1)
-
+        let visAngle = self.detectedAngles.first(where: { $0.id.uuidString == observationId })?.visAngle
+        let plane = SCNPlane(width: 0.6, height: 0.1)
         let material = SCNMaterial()
         material.isDoubleSided = true
-        material.diffuse.contents = UIImage(named: "vis2.png")
+        switch visAngle {
+        case 0:
+            material.diffuse.contents = UIImage(named: "vis1.png")
+        case 1:
+            material.diffuse.contents = UIImage(named: "vis2.png")
+        case 2:
+            material.diffuse.contents = UIImage(named: "vis3.png")
+        case 3:
+            material.diffuse.contents = UIImage(named: "vis4.png")
+        default:
+            debugPrint("found no vis angle")
+            material.diffuse.contents = UIImage(named: "vis2.png")
+        }
+
         material.transparencyMode = .aOne
+        plane.materials = [material]
+        let planeNode = SCNNode(geometry: plane)
 
-		plane.materials = [material]
+        //rotate with respect to camera
+        planeNode.rotation = SCNVector4Make(-1, 0, 0, .pi / 2)
 
-		let planeNode = SCNNode(geometry: plane)
-
-		//rotate with respect to camera
-		planeNode.rotation = SCNVector4Make(-1, 0, 0, .pi / 2)
-//		planeNode.pivotOnTopLeft()
-
-		let node = SCNNode()
-		node.addChildNode(planeNode)
+        let node = SCNNode()
+        node.addChildNode(planeNode)
 
         let bioNode = textNode(currentObservation.highestScoreProduct?.name ?? "Unknown", font: UIFont.systemFont(ofSize: 10), maxWidth: nil)
-		bioNode.pivotOnTopLeft()
-
-		bioNode.position.x += 0.05
-		bioNode.position.y += 0.06
-
-		planeNode.addChildNode(bioNode)
-		return node
+        bioNode.pivotOnTopLeft()
+        switch visAngle {
+        case 0:
+            bioNode.position.x -= 0.25
+            bioNode.position.y += 0.06
+        case 1:
+            bioNode.position.x += 0.05
+            bioNode.position.y += 0.06
+        case 2:
+            bioNode.position.x += 0.05
+            bioNode.position.y -= 0.017
+        case 3:
+            bioNode.position.x -= 0.25
+            bioNode.position.y -= 0.017
+        default:
+            debugPrint("found no vis angle")
+        }
+        planeNode.addChildNode(bioNode)
+        return node
 	}
 
 	func textNode(_ str: String, font: UIFont, maxWidth: Int? = nil) -> SCNNode {

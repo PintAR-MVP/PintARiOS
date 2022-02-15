@@ -37,6 +37,7 @@
 		F64FA63C27BB96D200ECF760 /* vis1.png in Resources */ = {isa = PBXBuildFile; fileRef = F64FA63827BB96D200ECF760 /* vis1.png */; };
 		F64FA63D27BB96D200ECF760 /* vis3.png in Resources */ = {isa = PBXBuildFile; fileRef = F64FA63927BB96D200ECF760 /* vis3.png */; };
 		F64FA63F27BB972000ECF760 /* CGRect+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = F64FA63E27BB972000ECF760 /* CGRect+Extension.swift */; };
+		F64FA64127BB978500ECF760 /* DetectedAngle.swift in Sources */ = {isa = PBXBuildFile; fileRef = F64FA64027BB978500ECF760 /* DetectedAngle.swift */; };
 		F6FFD2982769F1880076A3FF /* YOLOv5-train.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = F6FFD2972769F1880076A3FF /* YOLOv5-train.mlmodel */; };
 /* End PBXBuildFile section */
 
@@ -75,6 +76,7 @@
 		F64FA63827BB96D200ECF760 /* vis1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = vis1.png; sourceTree = "<group>"; };
 		F64FA63927BB96D200ECF760 /* vis3.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = vis3.png; sourceTree = "<group>"; };
 		F64FA63E27BB972000ECF760 /* CGRect+Extension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "CGRect+Extension.swift"; sourceTree = "<group>"; };
+		F64FA64027BB978500ECF760 /* DetectedAngle.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DetectedAngle.swift; sourceTree = "<group>"; };
 		F6FFD2972769F1880076A3FF /* YOLOv5-train.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = "YOLOv5-train.mlmodel"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -205,6 +207,7 @@
 				0B02C8FB274D71DE008F0506 /* CameraViewModel.swift */,
 				CC16C71C27465AAE007E1568 /* ImageDetailViewController.swift */,
 				0B4507F827944795008D4AB3 /* ARViewController.swift */,
+				F64FA64027BB978500ECF760 /* DetectedAngle.swift */,
 			);
 			path = Presentation;
 			sourceTree = "<group>";
@@ -371,6 +374,7 @@
 				0B02C900274D74CB008F0506 /* DetectObjectUseCase.swift in Sources */,
 				CC1A195B279031030045390E /* API.swift in Sources */,
 				CC16C71927465AAE007E1568 /* AppDelegate.swift in Sources */,
+				F64FA64127BB978500ECF760 /* DetectedAngle.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

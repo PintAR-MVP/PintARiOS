@@ -33,6 +33,11 @@
 		CCD96D442753A9EE00786079 /* RectangleDetection.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCD96D432753A9EE00786079 /* RectangleDetection.swift */; };
 		CCD96D462753A9F500786079 /* TextRecognition.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCD96D452753A9F500786079 /* TextRecognition.swift */; };
 		F633966427AC3C20006D9FA1 /* SCNVector3+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = F633966327AC3C20006D9FA1 /* SCNVector3+Extension.swift */; };
+		F64FA62B27B942D500ECF760 /* CGRect+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = F64FA62A27B942D500ECF760 /* CGRect+Extension.swift */; };
+		F64FA63127B970F500ECF760 /* vis3.png in Resources */ = {isa = PBXBuildFile; fileRef = F64FA62D27B970F500ECF760 /* vis3.png */; };
+		F64FA63227B970F500ECF760 /* vis4.png in Resources */ = {isa = PBXBuildFile; fileRef = F64FA62E27B970F500ECF760 /* vis4.png */; };
+		F64FA63327B970F500ECF760 /* vis1.png in Resources */ = {isa = PBXBuildFile; fileRef = F64FA62F27B970F500ECF760 /* vis1.png */; };
+		F64FA63527B98F8400ECF760 /* DetectedAngle.swift in Sources */ = {isa = PBXBuildFile; fileRef = F64FA63427B98F8400ECF760 /* DetectedAngle.swift */; };
 		F69F8F2227B66C2200832412 /* vis2.png in Resources */ = {isa = PBXBuildFile; fileRef = F69F8F2127B66C2200832412 /* vis2.png */; };
 		F6FFD2982769F1880076A3FF /* YOLOv5-train.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = F6FFD2972769F1880076A3FF /* YOLOv5-train.mlmodel */; };
 /* End PBXBuildFile section */
@@ -68,6 +73,11 @@
 		CCD96D432753A9EE00786079 /* RectangleDetection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RectangleDetection.swift; sourceTree = "<group>"; };
 		CCD96D452753A9F500786079 /* TextRecognition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextRecognition.swift; sourceTree = "<group>"; };
 		F633966327AC3C20006D9FA1 /* SCNVector3+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SCNVector3+Extension.swift"; sourceTree = "<group>"; };
+		F64FA62A27B942D500ECF760 /* CGRect+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CGRect+Extension.swift"; sourceTree = "<group>"; };
+		F64FA62D27B970F500ECF760 /* vis3.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = vis3.png; sourceTree = "<group>"; };
+		F64FA62E27B970F500ECF760 /* vis4.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = vis4.png; sourceTree = "<group>"; };
+		F64FA62F27B970F500ECF760 /* vis1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = vis1.png; sourceTree = "<group>"; };
+		F64FA63427B98F8400ECF760 /* DetectedAngle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetectedAngle.swift; sourceTree = "<group>"; };
 		F69F8F2127B66C2200832412 /* vis2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = vis2.png; sourceTree = "<group>"; };
 		F6FFD2972769F1880076A3FF /* YOLOv5-train.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = "YOLOv5-train.mlmodel"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -91,6 +101,7 @@
 				0B17363A27A322F6009D54FE /* UIImage+Extension.swift */,
 				0B17363C27A32405009D54FE /* SCNode+Extension.swift */,
 				F633966327AC3C20006D9FA1 /* SCNVector3+Extension.swift */,
+				F64FA62A27B942D500ECF760 /* CGRect+Extension.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -191,10 +202,14 @@
 			isa = PBXGroup;
 			children = (
 				F69F8F2127B66C2200832412 /* vis2.png */,
+				F64FA62D27B970F500ECF760 /* vis3.png */,
+				F64FA62E27B970F500ECF760 /* vis4.png */,
+				F64FA62F27B970F500ECF760 /* vis1.png */,
 				CC16C72C27465C8E007E1568 /* CameraViewController.swift */,
 				0B02C8FB274D71DE008F0506 /* CameraViewModel.swift */,
 				CC16C71C27465AAE007E1568 /* ImageDetailViewController.swift */,
 				0B4507F827944795008D4AB3 /* ARViewController.swift */,
+				F64FA63427B98F8400ECF760 /* DetectedAngle.swift */,
 			);
 			path = Presentation;
 			sourceTree = "<group>";
@@ -278,8 +293,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				CC16C72527465AB0007E1568 /* LaunchScreen.storyboard in Resources */,
+				F64FA63127B970F500ECF760 /* vis3.png in Resources */,
 				0B40C48A2746C4D500908879 /* main.storyboard in Resources */,
 				CC16C72227465AB0007E1568 /* Assets.xcassets in Resources */,
+				F64FA63227B970F500ECF760 /* vis4.png in Resources */,
+				F64FA63327B970F500ECF760 /* vis1.png in Resources */,
 				F69F8F2227B66C2200832412 /* vis2.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -341,12 +359,14 @@
 				F6FFD2982769F1880076A3FF /* YOLOv5-train.mlmodel in Sources */,
 				CC3D70822757D084008EB6AB /* ContourDetection.swift in Sources */,
 				0B02C8FA274D707D008F0506 /* CGPoint+Extension.swift in Sources */,
+				F64FA62B27B942D500ECF760 /* CGRect+Extension.swift in Sources */,
 				CC16C72D27465C8E007E1568 /* CameraViewController.swift in Sources */,
 				0BAA26812789D23100E10D28 /* ExtractImageUseCase.swift in Sources */,
 				CCD96D422753A3C400786079 /* DetectionTask.swift in Sources */,
 				F633966427AC3C20006D9FA1 /* SCNVector3+Extension.swift in Sources */,
 				CC1A195E279040C40045390E /* SearchQuery.swift in Sources */,
 				0BAA26842789DDAD00E10D28 /* DetectedObject.swift in Sources */,
+				F64FA63527B98F8400ECF760 /* DetectedAngle.swift in Sources */,
 				0B17363D27A32405009D54FE /* SCNode+Extension.swift in Sources */,
 				0B02C8FC274D71DE008F0506 /* CameraViewModel.swift in Sources */,
 				CC16AD972785CDB80016C47F /* ColorDetection.swift in Sources */,

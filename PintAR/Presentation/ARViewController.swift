@@ -24,11 +24,13 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 	private var rectangleMaskLayer = CAShapeLayer()
 
 	// we keep track of this to determine nearby anchors
-	private var rayCastResults = Set<ARRaycastResult>()
+	private var addedAnchor = Set<ARAnchor>()
 	private var sessionState: SessionState = .settingUp
 	private var distanceToPlane = Float()
 	private var anchorCount = Int()
 
+	//    Keep track of placed anchors and planes
+	private var detectedAngles = [DetectedAngle]()
 	// The pixel buffer being held for analysis; used to serialize Vision requests.
 	private var currentBuffer: CVPixelBuffer?
 	private lazy var viewModel = CameraViewModel(detectObjectUseCase: DetectObjectUseCase(detectionTypes: [.rectangles(model: .yoloV5)]))
@@ -55,15 +57,15 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 	override func viewWillAppear(_ animated: Bool) {
 		super.viewWillAppear(animated)
 
-        self.rayCastResults.removeAll()
+		self.addedAnchor.removeAll()
 		// Create a session configuration
 		let configuration = ARWorldTrackingConfiguration()
 		configuration.planeDetection = .horizontal
 
 		// Run the view's session
 		self.sceneView.session.run(configuration, options: [.removeExistingAnchors, .resetTracking])
-        // Set up coaching overlay.
-        self.setupCoachingOverlay()
+		// Set up coaching overlay.
+		self.setupCoachingOverlay()
 	}
 
 	private func setupSubscribers() {
@@ -87,7 +89,7 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 			case .normal = frame.camera.trackingState,
 			case .ready = self.sessionState else {
 				return
-		}
+			}
 
 		// Retain the image buffer for Vision processing.
 		self.currentBuffer = frame.capturedImage
@@ -106,59 +108,45 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 			let bounds = observation.boundingBox.applying(scale).applying(transform)
 			let midPoint = CGPoint(x: bounds.midX, y: bounds.midY)
 
-				let boxLayer = CAShapeLayer()
-				boxLayer.frame = bounds
-				boxLayer.cornerRadius = 10
-				boxLayer.opacity = 1
-				boxLayer.borderColor = UIColor.clear.cgColor
-				boxLayer.borderWidth = 6.0
+			let boxLayer = CAShapeLayer()
+			boxLayer.frame = bounds
+			boxLayer.cornerRadius = 10
+			boxLayer.opacity = 1
+			boxLayer.borderColor = UIColor.clear.cgColor
+			boxLayer.borderWidth = 6.0
 
-				self.rectangleMaskLayer.addSublayer(boxLayer)
+			self.rectangleMaskLayer.addSublayer(boxLayer)
 
-            self.sceneView.layer.addSublayer(self.rectangleMaskLayer)
+			self.sceneView.layer.addSublayer(self.rectangleMaskLayer)
 			let query = self.sceneView.raycastQuery(from: midPoint, allowing: .estimatedPlane, alignment: .vertical)
 			guard
 				let resultQuery = query,
 				let result = self.sceneView.session.raycast(resultQuery).first else {
 					debugPrint("missed")
 					continue
-			}
-
-            self.viewModel.stop = self.rayCastResults.count > 2
+				}
 
 			let anchor = ARAnchor(name: observation.id.uuidString, transform: result.worldTransform)
-//            anchor = zNormalization(anchor: anchor)
 
-            if observation.highestScoreProduct == nil, isNewAnchor(newResult: result) {
-                // Observe API response and add
-                observation.$highestScoreProduct
-                    .sink(receiveValue: { value in
-                        if value != nil {
-                            self.sceneView.session.add(anchor: anchor)
-                            self.rayCastResults.insert(result)
-                        }
-                    }).store(in: &cancellableSet)
-            } else if self.isNewAnchor(newResult: result) == true {
+			if observation.highestScoreProduct == nil, isNewAnchor(newResult: result) {
+				// Observe API response and add
+				observation.$highestScoreProduct
+					.sink(receiveValue: { value in
+						if value != nil {
+							self.sceneView.session.add(anchor: anchor)
+							let visAngle = self.findVisAngle(newAnchor: anchor)
+							self.detectedAngles.append(DetectedAngle(id: observation.id, visAngle: visAngle))
+							self.addedAnchor.insert(anchor)
+						}
+					}).store(in: &cancellableSet)
+			} else if self.isNewAnchor(newResult: result) == true {
 				self.sceneView.session.add(anchor: anchor)
-				self.rayCastResults.insert(result)
+				self.addedAnchor.insert(anchor)
 			} else {
 				debugPrint("Drop anchor because it is to close to another anchor")
 			}
 		}
 	}
-
-    func zNormalization(anchor: ARAnchor) -> ARAnchor {
-        if self.anchorCount > 0 {
-            let zPos = anchor.transform.columns.3.z
-            self.distanceToPlane = (self.distanceToPlane * Float(self.anchorCount - 1) + zPos) / Float(self.anchorCount)
-            self.anchorCount += 1
-            var translation = matrix_identity_float4x4
-            translation.columns.3.z = self.distanceToPlane
-            let transform = simd_mul(anchor.transform, translation)
-            return ARAnchor(transform: transform)
-        }
-        return anchor
-    }
 
 	func isNewAnchor(newResult: ARRaycastResult) -> Bool {
 		let minDistanceX: Float = 0.05
@@ -169,8 +157,8 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 		let newAnchor = newResult.worldTransform
 		var nearNeighbour = false
 
-		for oldResult in self.rayCastResults {
-			let oldAnchor = oldResult.worldTransform
+		for oldResult in self.addedAnchor {
+			let oldAnchor = oldResult.transform
 			//not taken into account z direction (towards camera) because that is shifted sometimes.
 			let oldAnchorX = oldAnchor.columns.3.x
 			let oldAnchorY = oldAnchor.columns.3.y
@@ -206,37 +194,123 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 		}
 	}
 
+	func findVisAngle(newAnchor: ARAnchor) -> Int {
+		// Return quarant which is best to visualize (default: 1 - top-right)
+		var visQuadrantList: [Double] = [0, 0, 0, 0] //top-left, top-right, bottom-right, bottom-left
+		let newAnchorX = newAnchor.transform.columns.3.x
+		let newAnchorY = newAnchor.transform.columns.3.y
+		if self.addedAnchor.isEmpty {
+			debugPrint("No anchors yet, default")
+			return 1
+		} else {
+			for oldAnchor in self.addedAnchor {
+				//not taken into account z direction (towards camera) because that is shifted sometimes.
+				let oldAnchorX = oldAnchor.transform.columns.3.x
+				let oldAnchorY = oldAnchor.transform.columns.3.y
+				if(oldAnchorX != 0) && (oldAnchorY != 0) {
+					let startPoint = SCNVector3(newAnchorX, newAnchorY, 0)
+					let endPoint = SCNVector3(oldAnchorX, oldAnchorY, 0)
+					let distance = startPoint.distance(vector: endPoint)
+					if distance < 0.7 {
+						guard let currentObservation = self.detectedAngles.first(where: { $0.id.uuidString == oldAnchor.name }) else {
+							debugPrint("Could not load current visAngle")
+							return 1
+						}
+
+						let oldVisAngle = currentObservation.visAngle
+						let intersectQuadrantList = isVisOverlapping(visQuadrant: oldVisAngle, newAnchorX: Double(newAnchorX), newAnchorY: Double(newAnchorY), oldAnchorX: Double(oldAnchorX), oldAnchorY: Double(oldAnchorY))
+						visQuadrantList = zip(visQuadrantList, intersectQuadrantList).map(+)
+					}
+				}
+				debugPrint(newAnchorX, newAnchorY, oldAnchorX, oldAnchorY, visQuadrantList)
+			}
+			if let maxValue = visQuadrantList.min(), let index = visQuadrantList.firstIndex(of: maxValue) {
+				debugPrint("Best Quadrant for vis is: ", index)
+				return index
+			} else {
+				debugPrint("Couldn't find optimal vis Quadrant, default")
+				return 1
+			}
+		}
+	}
+
+	func isVisOverlapping(visQuadrant: Int, newAnchorX: Double, newAnchorY: Double, oldAnchorX: Double, oldAnchorY: Double) -> [Double] {
+		// Calculate Intersection between Visualisation of old and possible new Anchors
+		var visQuadrantList: [Double] = [0, 0, 0, 0] //top-left, top-right, bottom-right, bottom-left
+		let oldQuadrants = makeQuadrants(x: oldAnchorX, y: oldAnchorY)
+		let newQuadrants = makeQuadrants(x: newAnchorX, y: newAnchorY)
+
+		for (i, newQuadrant) in newQuadrants.enumerated() {
+			visQuadrantList[i] += newQuadrant.rectIntersectionInPerc(r: oldQuadrants[visQuadrant])
+		}
+		return visQuadrantList
+	}
+
+	func makeQuadrants(x: Double, y: Double) -> [CGRect] {
+		// making array of four CGRects where a visualisation is possible (top-left, top-right, bottom-right, bottom-left)
+		let w = 0.30
+		let h = 0.05
+		let space = 0.04
+		let topleft = CGRect(x: -w + x, y: y + space, width: w, height: h)
+		let topright = CGRect(x: x, y: y + space, width: w, height: h)
+		let bottomright = CGRect(x: x, y: -h + y - space, width: w, height: h)
+		let bottomleft = CGRect(x: -w + x, y: -h + y - space, width: w, height: h)
+		return [topleft, topright, bottomright, bottomleft]
+	}
+
 	func renderer(_ renderer: SCNSceneRenderer, nodeFor anchor: ARAnchor) -> SCNNode? {
 		guard
 			let observationId = anchor.name,
-			let currentObservation = self.viewModel.accurateObjects.first(where: { $0.id.uuidString == observationId })  else {
+			let currentObservation = self.viewModel.accurateObjects.first(where: { $0.id.uuidString == observationId }) else {
 				return nil
+			}
+
+		let visAngle = self.detectedAngles.first(where: { $0.id.uuidString == observationId })?.visAngle
+		let plane = SCNPlane(width: 0.6, height: 0.1)
+		let material = SCNMaterial()
+		material.isDoubleSided = true
+		switch visAngle {
+		case 0:
+			material.diffuse.contents = UIImage(named: "vis1.png")
+		case 1:
+			material.diffuse.contents = UIImage(named: "vis2.png")
+		case 2:
+			material.diffuse.contents = UIImage(named: "vis3.png")
+		case 3:
+			material.diffuse.contents = UIImage(named: "vis4.png")
+		default:
+			debugPrint("found no vis angle")
+			material.diffuse.contents = UIImage(named: "vis2.png")
 		}
 
-		let plane = SCNPlane(width: 0.6, height: 0.1)
-
-        let material = SCNMaterial()
-        material.isDoubleSided = true
-        material.diffuse.contents = UIImage(named: "vis2.png")
-        material.transparencyMode = .aOne
-
+		material.transparencyMode = .aOne
 		plane.materials = [material]
-
 		let planeNode = SCNNode(geometry: plane)
 
 		//rotate with respect to camera
 		planeNode.rotation = SCNVector4Make(-1, 0, 0, .pi / 2)
-//		planeNode.pivotOnTopLeft()
 
 		let node = SCNNode()
 		node.addChildNode(planeNode)
 
-        let bioNode = textNode(currentObservation.highestScoreProduct?.name ?? "Unknown", font: UIFont.systemFont(ofSize: 10), maxWidth: nil)
+		let bioNode = textNode(currentObservation.highestScoreProduct?.name ?? "Unknown", font: UIFont.systemFont(ofSize: 10), maxWidth: nil)
 		bioNode.pivotOnTopLeft()
-
-		bioNode.position.x += 0.05
-		bioNode.position.y += 0.06
-
+		switch visAngle {
+		case 0:
+			bioNode.position.x -= 0.25
+			bioNode.position.y += 0.06
+		case 1:
+			bioNode.position.x += 0.05
+			bioNode.position.y += 0.06
+		case 2:
+			bioNode.position.x += 0.05
+			bioNode.position.y -= 0.017
+		case 3:
+			bioNode.position.x -= 0.25
+			bioNode.position.y -= 0.017
+		default:
+			debugPrint("found no vis angle")
+		}
 		planeNode.addChildNode(bioNode)
 		return node
 	}
@@ -265,9 +339,9 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 
 	/// Resets all tracking
 	private func resetTracking() {
-		self.rayCastResults.removeAll()
+		self.addedAnchor.removeAll()
 		let configuration = ARWorldTrackingConfiguration()
-        configuration.planeDetection = .horizontal
+		configuration.planeDetection = .horizontal
 		self.sceneView.session.run(configuration, options: [.removeExistingAnchors, .resetTracking])
 		self.viewModel.stop = false
 		self.setupCoachingOverlay()
@@ -280,6 +354,7 @@ class ARViewController: UIViewController, UIGestureRecognizerDelegate, ARSession
 		self.rectangleMaskLayer.removeFromSuperlayer()
 	}
 }
+
 
 /// - Tag: CoachingOverlayViewDelegate
 extension ARViewController: ARCoachingOverlayViewDelegate {
